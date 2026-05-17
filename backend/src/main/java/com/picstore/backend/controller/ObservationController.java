@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
+/* REST API controller for handling all observation-related HTTP requests. */
 @RestController
 @RequestMapping("api/observations")
 @RequiredArgsConstructor
@@ -15,16 +16,19 @@ public class ObservationController {
 
     private final ObservationRepository observationRepository;
 
+    /* Retrieves all observations from the database. */
     @GetMapping
-    public List<Observation> findAll(){
+    public List<Observation> findAll() {
         return observationRepository.findAll();
     }
 
+    /* Creates and saves a new observation record. */
     @PostMapping
-    public Observation add(@RequestBody Observation observation){
+    public Observation add(@RequestBody Observation observation) {
         return observationRepository.save(observation);
     }
 
+    /* Deletes an observation record by its ID. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteObservation(@PathVariable Long id) {
         if (observationRepository.existsById(id)) {
@@ -35,14 +39,13 @@ public class ObservationController {
         }
     }
 
+    /* Updates an existing observation record with new species name and category. */
     @PutMapping("/{id}")
     public ResponseEntity<Observation> updateObservation(@PathVariable Long id, @RequestBody Observation details) {
         return observationRepository.findById(id)
                 .map(observation -> {
                     observation.setSpeciesName(details.getSpeciesName());
-
                     observation.setCategoryId(details.getCategoryId());
-
                     Observation updated = observationRepository.save(observation);
                     return ResponseEntity.ok(updated);
                 })

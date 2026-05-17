@@ -1,7 +1,8 @@
 import { Text, View } from "react-native";
-import { useTheme } from "../context/ThemeContext";
-import { getGlobalStyles } from "../styles/globalStyles";
+import { useTheme } from "@/context/ThemeContext";
+import { getGlobalStyles } from "@/styles/globalStyles";
 
+/* User profile screen component. Displays user account information and placeholder text for future features. */
 export default function User() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);

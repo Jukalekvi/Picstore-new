@@ -7,6 +7,7 @@ import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+/* Type definition for an observation record displayed in the gallery. Contains all data needed to display and manage a species observation in the gallery view. */
 interface Observation {
     id: number;
     speciesName: string;
@@ -17,6 +18,7 @@ interface Observation {
     categoryId: number;
 }
 
+/* Gallery screen component for displaying and managing user's species observations. Allows users to view their collection of captured observations, edit species names/categories, and delete records. Fetches data from backend API when screen is focused. */
 export default function Gallery() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -25,6 +27,7 @@ export default function Gallery() {
     const [loading, setLoading] = useState(true);
     const [editingObservation, setEditingObservation] = useState<Observation | null>(null);
 
+    /* Fetches all observations from the backend API and updates the local state. Sets loading state during fetch and handles errors gracefully. */
     const fetchObservations = () => {
         fetch('http://192.168.0.121:8080/api/observations')
             .then(response => response.json())
@@ -38,6 +41,7 @@ export default function Gallery() {
             });
     };
 
+    /* Deletes an observation record after user confirmation. Shows an alert dialog to confirm before sending DELETE request to backend. */
     const deleteObservation = (id: number) => {
         Alert.alert(
             "Delete Observation",
@@ -68,6 +72,7 @@ export default function Gallery() {
         );
     };
 
+    /* Updates an observation record with new species name and category. Sends PUT request to backend with updated data while preserving location and timestamp. */
     const updateObservation = async (formData: { speciesName: string, categoryId: number }) => {
         if (!editingObservation) return;
 
@@ -76,7 +81,7 @@ export default function Gallery() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...editingObservation, // Keep existing fields like coordinates
+                    ...editingObservation,
                     speciesName: formData.speciesName,
                     categoryId: formData.categoryId
                 }),
@@ -95,12 +100,14 @@ export default function Gallery() {
         }
     };
 
+    // Fetch observations when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             fetchObservations();
         }, [])
     );
 
+    // Show loading spinner while fetching observations
     if (loading) {
         return (
             <View style={styles.centeredContent}>
@@ -113,6 +120,7 @@ export default function Gallery() {
         <View style={[styles.container, styles.screenPadding]}>
             <Text style={styles.mainTitle}>Your Collection</Text>
 
+            {/* Modal for editing observations */}
             <Modal visible={editingObservation !== null} animationType="slide">
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Edit Observation</Text>
@@ -131,6 +139,7 @@ export default function Gallery() {
                 </View>
             </Modal>
 
+            {/* List of observation cards */}
             <FlatList
                 data={observations}
                 keyExtractor={(item) => item.id.toString()}
@@ -140,7 +149,7 @@ export default function Gallery() {
                         <View style={styles.cardInfoRow}>
                             <View style={styles.cardTextContainer}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                    {/* Category Icon - Set to black as requested */}
+                                    {/* Category icon with background styling */}
                                     <View style={{
                                         backgroundColor: 'rgba(0,0,0,0.05)',
                                         padding: 6,
@@ -158,6 +167,7 @@ export default function Gallery() {
                                 </View>
                             </View>
 
+                            {/* Edit and delete action buttons */}
                             <View style={{ flexDirection: 'row', gap: 10 }}>
                                 <TouchableOpacity
                                     style={{ backgroundColor: colors.infoLight, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}

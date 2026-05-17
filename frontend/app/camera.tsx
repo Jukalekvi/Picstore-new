@@ -4,9 +4,10 @@ import { Button, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-n
 import * as Location from 'expo-location';
 import { useIsFocused } from '@react-navigation/native';
 import ObservationForm from '../components/ObservationForm';
-import { useTheme } from '../context/ThemeContext';
-import { getGlobalStyles } from '../styles/globalStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { getGlobalStyles } from '@/styles/globalStyles';
 
+/* Camera screen component for capturing species observations. Manages camera access, location retrieval, image capture, and submission of observations to the backend. Displays either the camera interface for capturing images or a form for entering species details. */
 export default function CameraScreen() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -20,7 +21,7 @@ export default function CameraScreen() {
     const cameraRef = useRef<CameraView>(null);
     const isFocused = useIsFocused();
 
-    // Fixed TypeScript type definition here to include categoryId
+    /* Saves a new observation to the backend API. Combines the species form data with captured image and location coordinates into a single request. */
     const saveNewObservation = async (formData: { speciesName: string; categoryId: number }) => {
         const observationData = {
             speciesName: formData.speciesName,
@@ -49,6 +50,7 @@ export default function CameraScreen() {
         }
     };
 
+    /* Captures a photo using the camera and retrieves GPS location data. Requests location permission if not already granted and fetches current position. Updates the image state with the captured photo URI for preview in the form. */
     const takePicture = async () => {
         if (cameraRef.current) {
             try {
@@ -68,13 +70,17 @@ export default function CameraScreen() {
         }
     };
 
+    /* Resets the form state to clear the captured image and location data. Called after successful observation submission or when user cancels the form. */
     const resetForm = () => {
         setImage(null);
         setLatitude(null);
         setLongitude(null);
     };
 
+    // Show permission request if camera permission hasn't been determined
     if (!permission) return <View style={styles.container} />;
+
+    // Show permission denied message and grant button
     if (!permission.granted) {
         return (
             <View style={styles.container}>
@@ -86,7 +92,7 @@ export default function CameraScreen() {
         );
     }
 
-    // View after taking a picture (The Form)
+    // Show form after taking a picture (allows user to enter species details and select category)
     if (image) {
         return (
             <ScrollView style={styles.container}>
@@ -103,7 +109,7 @@ export default function CameraScreen() {
         );
     }
 
-    // View while taking a picture (The Camera)
+    // Show camera interface for capturing pictures
     return (
         <View style={styles.container}>
             <View style={styles.formWrapper}>
