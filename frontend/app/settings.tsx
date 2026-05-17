@@ -1,11 +1,13 @@
 import { Text, View, TouchableOpacity } from "react-native";
-import { useTheme } from "../context/ThemeContext";
-import { getGlobalStyles } from "../styles/globalStyles";
+import { useTheme } from "@/context/ThemeContext";
+import { getGlobalStyles } from "@/styles/globalStyles";
 
+/* This screen lets users choose their preferred theme - light, dark, or system default. Their choice is saved to the device. */
 export default function Settings() {
     const { themeMode, setThemeMode, colors } = useTheme();
     const styles = getGlobalStyles(colors);
 
+    /* A button that represents one theme option. It becomes highlighted when selected. */
     const Segment = ({ mode, label }: { mode: 'light' | 'device' | 'dark', label: string }) => {
         const isActive = themeMode === mode;
 

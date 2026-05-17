@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { getGlobalStyles } from "@/styles/globalStyles";
 
+/* Home screen displaying the Picstore app welcome message. Serves as the landing page for users and displays the app title and welcome text. Will contain feed/updates of other users in the future */
 export default function Index() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);

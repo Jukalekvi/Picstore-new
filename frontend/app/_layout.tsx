@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+/* TabRoot component that defines the bottom tab navigation structure. Renders 5 main navigation tabs: Camera, Gallery, Home, Settings, and User. Uses the current theme colors for styling the tab bar. */
 function TabRoot() {
     const { colors } = useTheme();
     return (
@@ -60,6 +61,7 @@ function TabRoot() {
     );
 }
 
+/* Main layout component for the entire app. Wraps the tab navigation with ThemeProvider to enable theme support throughout the app. Exported as the default layout for the Expo Router navigation system. */
 export default function TabLayout() {
     return (
         <ThemeProvider>
