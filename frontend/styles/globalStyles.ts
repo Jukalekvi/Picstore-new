@@ -346,4 +346,50 @@ export const getGlobalStyles = (colors: any) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    // --- SEARCH & SORT CONTROLS: Styles for filtering and ordering lists ---
+    /* Container wrapping both search input and sort triggers */
+    searchSortContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 10,
+    },
+
+    /* Interactive search input field inside the gallery layout */
+    searchBarInput: {
+        flex: 1,
+        backgroundColor: colors.surface,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 10,
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: colors.border,
+        color: colors.textMain,
+    },
+
+    /* Small action button triggered to switch sorting modes */
+    sortActionButton: {
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    /* Container for small info text showing active layout sorting states */
+    sortInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginBottom: 8,
+        paddingHorizontal: 4,
+    },
+
+    /* Sub-text labeling the current order rule */
+    sortInfoText: {
+        fontSize: 11,
+        color: colors.textMain + '80',
+    },
 });

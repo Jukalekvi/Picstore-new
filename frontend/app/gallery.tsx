@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal, ScrollView } from "react-native";
+import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal, ScrollView, TextInput } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
 import ObservationForm from '../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
@@ -20,6 +20,9 @@ interface Observation {
     categoryId: number;
 }
 
+/* Sorting modes configuration type */
+type SortMode = 'newest' | 'oldest' | 'alphabetical';
+
 export default function Gallery() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -28,6 +31,10 @@ export default function Gallery() {
     const [loading, setLoading] = useState(true);
     const [editingObservation, setEditingObservation] = useState<Observation | null>(null);
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
+
+    /* New States for Search queries and Sorting behaviors */
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [sortMode, setSortMode] = useState<SortMode>('newest');
 
     const fetchObservations = () => {
         fetch('http://192.168.0.121:8080/api/observations')
@@ -117,9 +124,44 @@ export default function Gallery() {
         }, [])
     );
 
-    const filteredObservations = selectedCategoryFilter === null
-        ? observations
-        : observations.filter(obs => obs.categoryId === selectedCategoryFilter);
+    /* Cycles through the available sorting options when clicked */
+    const toggleSortMode = () => {
+        if (sortMode === 'newest') setSortMode('oldest');
+        else if (sortMode === 'oldest') setSortMode('alphabetical');
+        else setSortMode('newest');
+    };
+
+    /* Master processing pipeline: Category filter -> Search text query filter -> Sort rules executor */
+    const processedObservations = observations
+        /* Step 1: Category filtering */
+        .filter(obs => selectedCategoryFilter === null || obs.categoryId === selectedCategoryFilter)
+        /* Step 2: Text search matching against both species name and description fields */
+        .filter(obs => {
+            const query = searchQuery.toLowerCase();
+            const nameMatch = obs.speciesName?.toLowerCase().includes(query);
+            const descMatch = obs.description?.toLowerCase().includes(query);
+            return nameMatch || descMatch;
+        })
+        /* Step 3: Array sorting based on selected rules context */
+        .sort((a, b) => {
+            if (sortMode === 'newest') {
+                return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+            }
+            if (sortMode === 'oldest') {
+                return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
+            }
+            if (sortMode === 'alphabetical') {
+                return (a.speciesName || '').localeCompare(b.speciesName || '');
+            }
+            return 0;
+        });
+
+    /* Helper mapper for visual feedback on sorting label states */
+    const getSortIconAndLabel = () => {
+        if (sortMode === 'newest') return { icon: 'sort-clock-descending', label: 'Newest first' };
+        if (sortMode === 'oldest') return { icon: 'sort-clock-ascending', label: 'Oldest first' };
+        return { icon: 'sort-alphabetical-variant', label: 'Alphabetical (A-Z)' };
+    };
 
     if (loading) {
         return (
@@ -133,14 +175,43 @@ export default function Gallery() {
         <View style={[styles.container, styles.screenPadding]}>
             <Text style={styles.mainTitle}>Your Collection</Text>
 
-            {/* Filter Bar Widget connected to global universal stylesheet properties */}
+            {/* NEW: Search Bar & Sorting Action Hub Layout Block */}
+            <View style={styles.searchSortContainer}>
+                <TextInput
+                    style={styles.searchBarInput}
+                    placeholder="Search by name or description..."
+                    placeholderTextColor={colors.textMain + '60'}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    clearButtonMode="while-editing"
+                />
+                <TouchableOpacity
+                    style={styles.sortActionButton}
+                    onPress={toggleSortMode}
+                    activeOpacity={0.7}
+                >
+                    <MaterialCommunityIcons
+                        name={getSortIconAndLabel().icon as any}
+                        size={22}
+                        color={colors.primary}
+                    />
+                </TouchableOpacity>
+            </View>
+
+            {/* NEW: Info label display indicating active order conditions */}
+            <View style={styles.sortInfoRow}>
+                <Text style={styles.sortInfoText}>
+                    Order: {getSortIconAndLabel().label}
+                </Text>
+            </View>
+
+            {/* Horizontal Filter Bar Widget */}
             <View style={styles.filterBarContainer}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filterScrollContent}
                 >
-                    {/* "All" button */}
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
@@ -161,7 +232,6 @@ export default function Gallery() {
                         </Text>
                     </TouchableOpacity>
 
-                    {/* Dynamic categories mappings */}
                     {CATEGORIES.map((category) => (
                         <TouchableOpacity
                             key={category.id}
@@ -210,12 +280,13 @@ export default function Gallery() {
                 </View>
             </Modal>
 
+            {/* Render processed (filtered and sorted) observations */}
             <FlatList
-                data={filteredObservations}
+                data={processedObservations}
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={
                     <Text style={styles.emptyListText}>
-                        No observations found in this category.
+                        No results match your search parameters.
                     </Text>
                 }
                 renderItem={({ item }) => (
