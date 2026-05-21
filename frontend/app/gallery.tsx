@@ -7,10 +7,11 @@ import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-/* Type definition for an observation record displayed in the gallery. Contains all data needed to display and manage a species observation in the gallery view, now extended with reverse-geocoded spatial metadata. */
+/* Type definition for an observation record displayed in the gallery, now extended with short description string. */
 interface Observation {
     id: number;
     speciesName: string;
+    description: string | null;
     imagePath: string;
     latitude: number | null;
     longitude: number | null;
@@ -31,6 +32,7 @@ export default function Gallery() {
 
     /* Fetches all observations from the backend API and updates the local state. Sets loading state during fetch and handles errors gracefully. */
     const fetchObservations = () => {
+        // Remember to use your updated school/home network IP address here
         fetch('http://192.168.0.121:8080/api/observations')
             .then(response => response.json())
             .then(data => {
@@ -77,6 +79,7 @@ export default function Gallery() {
     /* Updates an observation record with new descriptive metadata and location privacy selections. Sends PUT request to backend with updated dataset payload. */
     const updateObservation = async (formData: {
         speciesName: string,
+        description?: string,
         categoryId: number,
         country?: string,
         city?: string,
@@ -92,11 +95,12 @@ export default function Gallery() {
                 body: JSON.stringify({
                     ...editingObservation,
                     speciesName: formData.speciesName,
+                    description: formData.description, /* Forward description string updates directly to the backend API */
                     categoryId: formData.categoryId,
-                    country: formData.country,       /* Map reverse-geocoded country updates directly */
-                    city: formData.city,             /* Map reverse-geocoded city updates directly */
-                    latitude: formData.latitude,     /* Reflect potentially nullified coordinates via privacy switch */
-                    longitude: formData.longitude    /* Reflect potentially nullified coordinates via privacy switch */
+                    country: formData.country,
+                    city: formData.city,
+                    latitude: formData.latitude,
+                    longitude: formData.longitude
                 }),
             });
 
@@ -138,10 +142,11 @@ export default function Gallery() {
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Edit Observation</Text>
                     {editingObservation && (
-                        /* Enriched initialData wrapper object mapping layout properties safely to the ObservationForm component child instance */
+                        /* Enriched initialData wrapper object mapping layout properties safely including description */
                         <ObservationForm
                             initialData={{
                                 speciesName: editingObservation.speciesName,
+                                description: editingObservation.description,
                                 imagePath: editingObservation.imagePath,
                                 categoryId: editingObservation.categoryId,
                                 latitude: editingObservation.latitude,
@@ -181,12 +186,20 @@ export default function Gallery() {
                                             color="#000000"
                                         />
                                     </View>
-                                    <Text style={styles.speciesText}>{item.speciesName}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.speciesText}>{item.speciesName}</Text>
+                                        {/* Optional visual sub-text rendering for description values directly within list items if present */}
+                                        {item.description && (
+                                            <Text style={{ fontSize: 12, color: colors.textMain + 'A0', marginTop: 2 }} numberOfLines={1}>
+                                                {item.description}
+                                            </Text>
+                                        )}
+                                    </View>
                                 </View>
                             </View>
 
                             {/* Edit and delete action buttons */}
-                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                                 <TouchableOpacity
                                     style={{ backgroundColor: colors.infoLight, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}
                                     onPress={() => setEditingObservation(item)}

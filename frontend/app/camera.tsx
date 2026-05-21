@@ -7,7 +7,7 @@ import ObservationForm from '../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 
-/* Camera screen component for capturing species observations. Manages camera access, location retrieval, image capture, and submission of observations to the backend. Displays either the camera interface for capturing images or a form for entering species details. */
+/* Camera screen component for capturing species observations. Manages camera access, location retrieval, image capture, and submission of observations to the backend. Displays either the camera interface for capturing images or a form for entering species details, now supporting 200-character description strings. */
 export default function CameraScreen() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -21,19 +21,22 @@ export default function CameraScreen() {
     const cameraRef = useRef<CameraView>(null);
     const isFocused = useIsFocused();
 
-    /* Saves a new observation to the backend API. Combines form data, captured image URI, and resolved country/city location info into a single request payload. */
-    const saveNewObservation = async (formData: { speciesName: string; categoryId: number; country?: string; city?: string }) => {
+    /* Saves a new observation to the backend API. Combines form data including short notes/descriptions, captured image URI, and resolved country/city location info into a single request payload. */
+    const saveNewObservation = async (formData: { speciesName: string; description?: string; categoryId: number; country?: string; city?: string; latitude?: number | null; longitude?: number | null }) => {
         const observationData = {
             speciesName: formData.speciesName,
+            description: formData.description, /* Forward description updates directly to the backend API */
             categoryId: formData.categoryId,
             imagePath: image,
-            latitude: latitude,
-            longitude: longitude,
-            country: formData.country || "Unknown Country", /* Enriched field from reverse geocoding */
-            city: formData.city || "Unknown City"          /* Enriched field from reverse geocoding */
+            /* Respect the potentially nullified coordinates forwarded via the privacy switch */
+            latitude: formData.latitude !== undefined ? formData.latitude : latitude,
+            longitude: formData.longitude !== undefined ? formData.longitude : longitude,
+            country: formData.country || "Unknown Country",
+            city: formData.city || "Unknown City"
         };
 
         try {
+            /* Remember to adjust the IP address string if switching networks between home and school */
             const response = await fetch('http://192.168.0.121:8080/api/observations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -100,10 +103,11 @@ export default function CameraScreen() {
             <ScrollView style={styles.container}>
                 <View style={styles.formWrapper}>
                     <Text style={styles.modalTitle}>New Observation</Text>
-                    {/* Integrated latitude and longitude into initialData so that ObservationForm can execute reverse-geocoding */}
+                    {/* Integrated description initialization and shared raw coordinates layout parameters safely */}
                     <ObservationForm
                         initialData={{
                             speciesName: '',
+                            description: '', /* Initialize description string as empty for new creation forms */
                             imagePath: image,
                             latitude: latitude,
                             longitude: longitude

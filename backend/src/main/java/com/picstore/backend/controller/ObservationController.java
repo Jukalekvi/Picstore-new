@@ -47,7 +47,8 @@ public class ObservationController {
                     observation.setSpeciesName(details.getSpeciesName());
                     observation.setCategoryId(details.getCategoryId());
 
-                    /* Dynamic updates for new localization and coordinate parameters */
+                    /* Dynamic updates for new descriptive notes and parameters */
+                    observation.setDescription(details.getDescription());
                     observation.setLatitude(details.getLatitude());
                     observation.setLongitude(details.getLongitude());
                     observation.setCountry(details.getCountry());

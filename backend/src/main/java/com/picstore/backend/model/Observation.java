@@ -21,6 +21,10 @@ public class Observation {
     /* Common name of the species that was observed */
     private String speciesName;
 
+    /* Optional user-provided notes or description of the sighting, limited to 200 characters */
+    @Column(length = 200)
+    private String description;
+
     /* File path or URI to the captured image of the observation */
     private String imagePath;
 
