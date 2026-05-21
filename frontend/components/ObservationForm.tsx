@@ -6,12 +6,14 @@ import { CATEGORIES } from '@/constants/categories';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
-/* This form is used to enter or edit details about a species observation. It displays the photo, location details with a privacy toggle, and handles metadata updates. */
+/* This form is used to enter or edit details about a species observation. It displays the photo, location details with a privacy toggle, and handles metadata updates including a 200-character description. */
 export default function ObservationForm({ initialData, onSave, onCancel, saveButtonText = "Save" }: any) {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
 
     const [name, setName] = useState(initialData.speciesName);
+    /* State to hold the description string */
+    const [description, setDescription] = useState(initialData.description || '');
     /* If no category is provided, default to category 8 which is "Undefined" */
     const [selectedCategory, setSelectedCategory] = useState(initialData.categoryId || 8);
 
@@ -66,11 +68,12 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
         void fetchLocationDetails();
     }, [initialData.latitude, initialData.longitude, initialData.country, initialData.city]);
 
-    /* Package and forward the enriched observation entity, respecting the user's privacy choices */
+    /* Package and forward the enriched observation entity, respecting the user's privacy choices and including the description */
     const handleSave = () => {
         onSave({
             ...initialData,
             speciesName: name,
+            description: description,
             categoryId: selectedCategory,
             /* If user disabled location sharing, save as Private, otherwise use resolved values */
             country: shareLocation ? resolvedCountry : "Private Location",
@@ -108,7 +111,7 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
                 {/* Shows the photo that was taken */}
                 <Image source={{ uri: initialData.imagePath }} style={styles.imagePreview} />
 
-                {/* Privacy Settings Control Panel Widget with fixed layout property */}
+                {/* Privacy Settings Control Panel Widget */}
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
@@ -171,6 +174,22 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
                     value={name}
                     onChangeText={setName}
                 />
+
+                {/* Text box to type the short description with length validation character counter */}
+                <View style={{ alignSelf: 'stretch', marginBottom: 15 }}>
+                    <TextInput
+                        style={[styles.input, { height: 80, paddingTop: 10, textAlignVertical: 'top' }]}
+                        placeholder="Description / notes (max 200 chars)"
+                        placeholderTextColor={colors.textMain + '80'}
+                        value={description}
+                        onChangeText={setDescription}
+                        maxLength={200}
+                        multiline={true}
+                    />
+                    <Text style={{ alignSelf: 'flex-end', color: colors.textMain + '60', fontSize: 11, marginTop: 2 }}>
+                        {description.length} / 200
+                    </Text>
+                </View>
 
                 {/* Label for the category selection */}
                 <Text style={{ alignSelf: 'flex-start', color: colors.textMain, fontWeight: 'bold', marginBottom: 10 }}>
