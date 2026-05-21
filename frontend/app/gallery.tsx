@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal } from "react-native";
+import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal, ScrollView, TextInput } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
 import ObservationForm from '../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
@@ -7,7 +7,6 @@ import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-/* Type definition for an observation record displayed in the gallery, now extended with short description string. */
 interface Observation {
     id: number;
     speciesName: string;
@@ -21,7 +20,9 @@ interface Observation {
     categoryId: number;
 }
 
-/* Gallery screen component for displaying and managing user's species observations. Allows users to view their collection of captured observations, edit species names/categories, and delete records. Fetches data from backend API when screen is focused. */
+/* Sorting modes configuration type */
+type SortMode = 'newest' | 'oldest' | 'alphabetical';
+
 export default function Gallery() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -29,10 +30,13 @@ export default function Gallery() {
     const [observations, setObservations] = useState<Observation[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingObservation, setEditingObservation] = useState<Observation | null>(null);
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
 
-    /* Fetches all observations from the backend API and updates the local state. Sets loading state during fetch and handles errors gracefully. */
+    /* New States for Search queries and Sorting behaviors */
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [sortMode, setSortMode] = useState<SortMode>('newest');
+
     const fetchObservations = () => {
-        // Remember to use your updated school/home network IP address here
         fetch('http://192.168.0.121:8080/api/observations')
             .then(response => response.json())
             .then(data => {
@@ -45,7 +49,6 @@ export default function Gallery() {
             });
     };
 
-    /* Deletes an observation record after user confirmation. Shows an alert dialog to confirm before sending DELETE request to backend. */
     const deleteObservation = (id: number) => {
         Alert.alert(
             "Delete Observation",
@@ -60,7 +63,6 @@ export default function Gallery() {
                             const response = await fetch(`http://192.168.0.121:8080/api/observations/${id}`, {
                                 method: 'DELETE',
                             });
-
                             if (response.ok) {
                                 setObservations(prev => prev.filter(obs => obs.id !== id));
                             } else {
@@ -76,7 +78,6 @@ export default function Gallery() {
         );
     };
 
-    /* Updates an observation record with new descriptive metadata and location privacy selections. Sends PUT request to backend with updated dataset payload. */
     const updateObservation = async (formData: {
         speciesName: string,
         description?: string,
@@ -95,7 +96,7 @@ export default function Gallery() {
                 body: JSON.stringify({
                     ...editingObservation,
                     speciesName: formData.speciesName,
-                    description: formData.description, /* Forward description string updates directly to the backend API */
+                    description: formData.description,
                     categoryId: formData.categoryId,
                     country: formData.country,
                     city: formData.city,
@@ -117,14 +118,51 @@ export default function Gallery() {
         }
     };
 
-    // Fetch observations when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             fetchObservations();
         }, [])
     );
 
-    // Show loading spinner while fetching observations
+    /* Cycles through the available sorting options when clicked */
+    const toggleSortMode = () => {
+        if (sortMode === 'newest') setSortMode('oldest');
+        else if (sortMode === 'oldest') setSortMode('alphabetical');
+        else setSortMode('newest');
+    };
+
+    /* Master processing pipeline: Category filter -> Search text query filter -> Sort rules executor */
+    const processedObservations = observations
+        /* Step 1: Category filtering */
+        .filter(obs => selectedCategoryFilter === null || obs.categoryId === selectedCategoryFilter)
+        /* Step 2: Text search matching against both species name and description fields */
+        .filter(obs => {
+            const query = searchQuery.toLowerCase();
+            const nameMatch = obs.speciesName?.toLowerCase().includes(query);
+            const descMatch = obs.description?.toLowerCase().includes(query);
+            return nameMatch || descMatch;
+        })
+        /* Step 3: Array sorting based on selected rules context */
+        .sort((a, b) => {
+            if (sortMode === 'newest') {
+                return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+            }
+            if (sortMode === 'oldest') {
+                return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
+            }
+            if (sortMode === 'alphabetical') {
+                return (a.speciesName || '').localeCompare(b.speciesName || '');
+            }
+            return 0;
+        });
+
+    /* Helper mapper for visual feedback on sorting label states */
+    const getSortIconAndLabel = () => {
+        if (sortMode === 'newest') return { icon: 'sort-clock-descending', label: 'Newest first' };
+        if (sortMode === 'oldest') return { icon: 'sort-clock-ascending', label: 'Oldest first' };
+        return { icon: 'sort-alphabetical-variant', label: 'Alphabetical (A-Z)' };
+    };
+
     if (loading) {
         return (
             <View style={styles.centeredContent}>
@@ -137,12 +175,92 @@ export default function Gallery() {
         <View style={[styles.container, styles.screenPadding]}>
             <Text style={styles.mainTitle}>Your Collection</Text>
 
-            {/* Modal for editing observations */}
+            {/* NEW: Search Bar & Sorting Action Hub Layout Block */}
+            <View style={styles.searchSortContainer}>
+                <TextInput
+                    style={styles.searchBarInput}
+                    placeholder="Search by name or description..."
+                    placeholderTextColor={colors.textMain + '60'}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    clearButtonMode="while-editing"
+                />
+                <TouchableOpacity
+                    style={styles.sortActionButton}
+                    onPress={toggleSortMode}
+                    activeOpacity={0.7}
+                >
+                    <MaterialCommunityIcons
+                        name={getSortIconAndLabel().icon as any}
+                        size={22}
+                        color={colors.primary}
+                    />
+                </TouchableOpacity>
+            </View>
+
+            {/* NEW: Info label display indicating active order conditions */}
+            <View style={styles.sortInfoRow}>
+                <Text style={styles.sortInfoText}>
+                    Order: {getSortIconAndLabel().label}
+                </Text>
+            </View>
+
+            {/* Horizontal Filter Bar Widget */}
+            <View style={styles.filterBarContainer}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                >
+                    <TouchableOpacity
+                        style={[
+                            styles.filterButton,
+                            selectedCategoryFilter === null ? styles.filterButtonActive : styles.filterButtonInactive
+                        ]}
+                        onPress={() => setSelectedCategoryFilter(null)}
+                    >
+                        <MaterialCommunityIcons
+                            name="image-multiple"
+                            size={16}
+                            color={selectedCategoryFilter === null ? "#ffffff" : colors.textMain}
+                        />
+                        <Text style={[
+                            styles.filterButtonText,
+                            { color: selectedCategoryFilter === null ? "#ffffff" : colors.textMain }
+                        ]}>
+                            All
+                        </Text>
+                    </TouchableOpacity>
+
+                    {CATEGORIES.map((category) => (
+                        <TouchableOpacity
+                            key={category.id}
+                            style={[
+                                styles.filterButton,
+                                selectedCategoryFilter === category.id ? styles.filterButtonActive : styles.filterButtonInactive
+                            ]}
+                            onPress={() => setSelectedCategoryFilter(category.id)}
+                        >
+                            <MaterialCommunityIcons
+                                name={category.icon as any}
+                                size={16}
+                                color={selectedCategoryFilter === category.id ? "#ffffff" : colors.textMain}
+                            />
+                            <Text style={[
+                                styles.filterButtonText,
+                                { color: selectedCategoryFilter === category.id ? "#ffffff" : colors.textMain }
+                            ]}>
+                                {category.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
             <Modal visible={editingObservation !== null} animationType="slide">
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Edit Observation</Text>
                     {editingObservation && (
-                        /* Enriched initialData wrapper object mapping layout properties safely including description */
                         <ObservationForm
                             initialData={{
                                 speciesName: editingObservation.speciesName,
@@ -162,35 +280,32 @@ export default function Gallery() {
                 </View>
             </Modal>
 
-            {/* List of observation cards */}
+            {/* Render processed (filtered and sorted) observations */}
             <FlatList
-                data={observations}
+                data={processedObservations}
                 keyExtractor={(item) => item.id.toString()}
+                ListEmptyComponent={
+                    <Text style={styles.emptyListText}>
+                        No results match your search parameters.
+                    </Text>
+                }
                 renderItem={({ item }) => (
                     <View style={styles.card}>
                         <Image source={{ uri: item.imagePath }} style={styles.cardImage} />
                         <View style={styles.cardInfoRow}>
                             <View style={styles.cardTextContainer}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                    {/* Category icon with background styling */}
-                                    <View style={{
-                                        backgroundColor: 'rgba(0,0,0,0.05)',
-                                        padding: 6,
-                                        borderRadius: 8,
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
+                                <View style={styles.cardHeaderRow}>
+                                    <View style={styles.iconBadge}>
                                         <MaterialCommunityIcons
                                             name={(CATEGORIES.find(c => c.id === item.categoryId)?.icon || 'help-circle') as any}
                                             size={22}
                                             color="#000000"
                                         />
                                     </View>
-                                    <View style={{ flex: 1 }}>
+                                    <View style={styles.cardTextWrapper}>
                                         <Text style={styles.speciesText}>{item.speciesName}</Text>
-                                        {/* Optional visual sub-text rendering for description values directly within list items if present */}
                                         {item.description && (
-                                            <Text style={{ fontSize: 12, color: colors.textMain + 'A0', marginTop: 2 }} numberOfLines={1}>
+                                            <Text style={[styles.descriptionText, { color: colors.textMain + 'A0' }]} numberOfLines={1}>
                                                 {item.description}
                                             </Text>
                                         )}
@@ -198,8 +313,7 @@ export default function Gallery() {
                                 </View>
                             </View>
 
-                            {/* Edit and delete action buttons */}
-                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                            <View style={styles.actionButtonRow}>
                                 <TouchableOpacity
                                     style={{ backgroundColor: colors.infoLight, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}
                                     onPress={() => setEditingObservation(item)}

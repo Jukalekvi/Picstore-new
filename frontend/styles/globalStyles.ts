@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { SPACING, SIZES } from './theme';
 
-/* Creates a dynamic StyleSheet containing all global app styles. This function takes the current theme colors and generates responsive styles for all components. Styles are organized into logical sections: layouts, cards, forms, buttons, camera, modals, and controls. */
+/* Creates a dynamic StyleSheet containing all global app styles. This function takes the current theme colors and generates responsive styles for all components. Styles are organized into logical sections: layouts, cards, forms, buttons, camera, modals, controls, and category filtering. */
 export const getGlobalStyles = (colors: any) => StyleSheet.create({
     // --- LAYOUTS: Basic container and positioning styles ---
     /* Main screen container with flexible layout */
@@ -72,6 +72,31 @@ export const getGlobalStyles = (colors: any) => StyleSheet.create({
         fontSize: SIZES.fontLarge,
         fontWeight: 'bold',
         color: colors.textMain
+    },
+
+    /* Horizontal alignment row for internal card components like badge and text wrappers */
+    cardHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+
+    /* Container wrapping textual content within individual card layouts */
+    cardTextWrapper: {
+        flex: 1,
+    },
+
+    /* Sub-text preview layout for descriptions or long field notes inside a card view */
+    descriptionText: {
+        fontSize: 12,
+        marginTop: 2,
+    },
+
+    /* Grouped display container for handling editing and elimination triggers per row item */
+    actionButtonRow: {
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
     },
 
     // --- FORMS & INPUTS: Form control styles ---
@@ -234,7 +259,7 @@ export const getGlobalStyles = (colors: any) => StyleSheet.create({
         color: colors.primary,
     },
 
-    // --- Category switcher (for species selection) ---
+    // --- CATEGORY COMPONENT TYPING & FILTERING: Dynamic selection and filtering controls ---
     /* Container for horizontal scrollable category list */
     categoryList: {
         marginVertical: 15,
@@ -267,5 +292,104 @@ export const getGlobalStyles = (colors: any) => StyleSheet.create({
         marginTop: 5,
         color: colors.textMain,
         textAlign: 'center',
+    },
+
+    /* Outer structural layout wrapper containing the top filter bar engine inside gallery feeds */
+    filterBarContainer: {
+        marginBottom: 15,
+    },
+
+    /* Inside positioning layout defining spacing metrics across horizontal sliding category filter structures */
+    filterScrollContent: {
+        gap: 8,
+        paddingVertical: 5,
+    },
+
+    /* Clickable filter capsule element supporting multi-state button transitions */
+    filterButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        gap: 6,
+    },
+
+    /* Activated layout design parameters applied to category nodes when active filters occur */
+    filterButtonActive: {
+        backgroundColor: colors.primary,
+    },
+
+    /* Inactive baseline color configuration applied to filter pill layouts */
+    filterButtonInactive: {
+        backgroundColor: colors.textMain + '10',
+    },
+
+    /* Text formatting configurations enforced upon active inline category titles */
+    filterButtonText: {
+        fontWeight: '600',
+        fontSize: 13,
+    },
+
+    /* Fallback visual informational layout loaded when zero items pass the requested query rules */
+    emptyListText: {
+        textAlign: 'center',
+        color: colors.textMain + '60',
+        marginTop: 40,
+    },
+
+    /* Micro-layout background styling wrapping individual item category icon grids inside lists */
+    iconBadge: {
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        padding: 6,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    // --- SEARCH & SORT CONTROLS: Styles for filtering and ordering lists ---
+    /* Container wrapping both search input and sort triggers */
+    searchSortContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 10,
+    },
+
+    /* Interactive search input field inside the gallery layout */
+    searchBarInput: {
+        flex: 1,
+        backgroundColor: colors.surface,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 10,
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: colors.border,
+        color: colors.textMain,
+    },
+
+    /* Small action button triggered to switch sorting modes */
+    sortActionButton: {
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    /* Container for small info text showing active layout sorting states */
+    sortInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginBottom: 8,
+        paddingHorizontal: 4,
+    },
+
+    /* Sub-text labeling the current order rule */
+    sortInfoText: {
+        fontSize: 11,
+        color: colors.textMain + '80',
     },
 });
