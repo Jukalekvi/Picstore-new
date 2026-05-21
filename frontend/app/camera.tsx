@@ -21,14 +21,16 @@ export default function CameraScreen() {
     const cameraRef = useRef<CameraView>(null);
     const isFocused = useIsFocused();
 
-    /* Saves a new observation to the backend API. Combines the species form data with captured image and location coordinates into a single request. */
-    const saveNewObservation = async (formData: { speciesName: string; categoryId: number }) => {
+    /* Saves a new observation to the backend API. Combines form data, captured image URI, and resolved country/city location info into a single request payload. */
+    const saveNewObservation = async (formData: { speciesName: string; categoryId: number; country?: string; city?: string }) => {
         const observationData = {
             speciesName: formData.speciesName,
             categoryId: formData.categoryId,
             imagePath: image,
             latitude: latitude,
-            longitude: longitude
+            longitude: longitude,
+            country: formData.country || "Unknown Country", /* Enriched field from reverse geocoding */
+            city: formData.city || "Unknown City"          /* Enriched field from reverse geocoding */
         };
 
         try {
@@ -98,8 +100,14 @@ export default function CameraScreen() {
             <ScrollView style={styles.container}>
                 <View style={styles.formWrapper}>
                     <Text style={styles.modalTitle}>New Observation</Text>
+                    {/* Integrated latitude and longitude into initialData so that ObservationForm can execute reverse-geocoding */}
                     <ObservationForm
-                        initialData={{ speciesName: '', imagePath: image }}
+                        initialData={{
+                            speciesName: '',
+                            imagePath: image,
+                            latitude: latitude,
+                            longitude: longitude
+                        }}
                         onSave={saveNewObservation}
                         onCancel={resetForm}
                         saveButtonText="Save Observation"
