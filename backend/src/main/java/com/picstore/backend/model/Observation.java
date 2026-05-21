@@ -30,6 +30,12 @@ public class Observation {
     /* Longitude coordinate of the observation location */
     private Double longitude;
 
+    /* Human-readable country resolved from GPS coordinates via reverse-geocoding */
+    private String country;
+
+    /* Human-readable city or subregion resolved from GPS coordinates via reverse-geocoding */
+    private String city;
+
     /* Timestamp indicating when this observation was recorded */
     private LocalDateTime timestamp;
 

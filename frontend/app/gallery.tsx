@@ -7,13 +7,15 @@ import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-/* Type definition for an observation record displayed in the gallery. Contains all data needed to display and manage a species observation in the gallery view. */
+/* Type definition for an observation record displayed in the gallery. Contains all data needed to display and manage a species observation in the gallery view, now extended with reverse-geocoded spatial metadata. */
 interface Observation {
     id: number;
     speciesName: string;
     imagePath: string;
-    latitude: number;
-    longitude: number;
+    latitude: number | null;
+    longitude: number | null;
+    country: string | null;
+    city: string | null;
     timestamp: string | null;
     categoryId: number;
 }
@@ -72,8 +74,15 @@ export default function Gallery() {
         );
     };
 
-    /* Updates an observation record with new species name and category. Sends PUT request to backend with updated data while preserving location and timestamp. */
-    const updateObservation = async (formData: { speciesName: string, categoryId: number }) => {
+    /* Updates an observation record with new descriptive metadata and location privacy selections. Sends PUT request to backend with updated dataset payload. */
+    const updateObservation = async (formData: {
+        speciesName: string,
+        categoryId: number,
+        country?: string,
+        city?: string,
+        latitude?: number | null,
+        longitude?: number | null
+    }) => {
         if (!editingObservation) return;
 
         try {
@@ -83,7 +92,11 @@ export default function Gallery() {
                 body: JSON.stringify({
                     ...editingObservation,
                     speciesName: formData.speciesName,
-                    categoryId: formData.categoryId
+                    categoryId: formData.categoryId,
+                    country: formData.country,       /* Map reverse-geocoded country updates directly */
+                    city: formData.city,             /* Map reverse-geocoded city updates directly */
+                    latitude: formData.latitude,     /* Reflect potentially nullified coordinates via privacy switch */
+                    longitude: formData.longitude    /* Reflect potentially nullified coordinates via privacy switch */
                 }),
             });
 
@@ -125,11 +138,16 @@ export default function Gallery() {
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Edit Observation</Text>
                     {editingObservation && (
+                        /* Enriched initialData wrapper object mapping layout properties safely to the ObservationForm component child instance */
                         <ObservationForm
                             initialData={{
                                 speciesName: editingObservation.speciesName,
                                 imagePath: editingObservation.imagePath,
-                                categoryId: editingObservation.categoryId
+                                categoryId: editingObservation.categoryId,
+                                latitude: editingObservation.latitude,
+                                longitude: editingObservation.longitude,
+                                country: editingObservation.country,
+                                city: editingObservation.city
                             }}
                             onSave={updateObservation}
                             onCancel={() => setEditingObservation(null)}

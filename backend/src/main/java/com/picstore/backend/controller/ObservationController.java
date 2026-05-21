@@ -39,13 +39,20 @@ public class ObservationController {
         }
     }
 
-    /* Updates an existing observation record with new species name and category. */
+    /* Updates an existing observation record with new descriptive metadata and location privacy configurations. */
     @PutMapping("/{id}")
     public ResponseEntity<Observation> updateObservation(@PathVariable Long id, @RequestBody Observation details) {
         return observationRepository.findById(id)
                 .map(observation -> {
                     observation.setSpeciesName(details.getSpeciesName());
                     observation.setCategoryId(details.getCategoryId());
+
+                    /* Dynamic updates for new localization and coordinate parameters */
+                    observation.setLatitude(details.getLatitude());
+                    observation.setLongitude(details.getLongitude());
+                    observation.setCountry(details.getCountry());
+                    observation.setCity(details.getCity());
+
                     Observation updated = observationRepository.save(observation);
                     return ResponseEntity.ok(updated);
                 })
