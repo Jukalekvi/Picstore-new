@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal, ScrollView, TextInput } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
-import ObservationForm from '../components/ObservationForm';
+import ObservationForm from '../../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";
@@ -23,6 +23,9 @@ interface Observation {
 /* Sorting modes configuration type */
 type SortMode = 'newest' | 'oldest' | 'alphabetical';
 
+// Base URL targeting the workstation server IP address for asset rendering fallback
+const BASE_URL = 'http://192.168.0.121:8080';
+
 export default function Gallery() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -36,8 +39,14 @@ export default function Gallery() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [sortMode, setSortMode] = useState<SortMode>('newest');
 
+    // Helper function to dynamically prepend backend base URL if the path is relative
+    const getFullImageUrl = (imagePath: string) => {
+        if (!imagePath) return '';
+        return imagePath.startsWith('http') ? imagePath : `${BASE_URL}${imagePath}`;
+    };
+
     const fetchObservations = () => {
-        fetch('http://192.168.0.121:8080/api/observations')
+        fetch(`${BASE_URL}/api/observations`)
             .then(response => response.json())
             .then(data => {
                 setObservations(data);
@@ -60,7 +69,7 @@ export default function Gallery() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            const response = await fetch(`http://192.168.0.121:8080/api/observations/${id}`, {
+                            const response = await fetch(`${BASE_URL}/api/observations/${id}`, {
                                 method: 'DELETE',
                             });
                             if (response.ok) {
@@ -90,7 +99,7 @@ export default function Gallery() {
         if (!editingObservation) return;
 
         try {
-            const response = await fetch(`http://192.168.0.121:8080/api/observations/${editingObservation.id}`, {
+            const response = await fetch(`${BASE_URL}/api/observations/${editingObservation.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -265,7 +274,8 @@ export default function Gallery() {
                             initialData={{
                                 speciesName: editingObservation.speciesName,
                                 description: editingObservation.description,
-                                imagePath: editingObservation.imagePath,
+                                // Dynamically unpack full URI string layout for the editing preview layout context
+                                imagePath: getFullImageUrl(editingObservation.imagePath),
                                 categoryId: editingObservation.categoryId,
                                 latitude: editingObservation.latitude,
                                 longitude: editingObservation.longitude,
@@ -291,7 +301,8 @@ export default function Gallery() {
                 }
                 renderItem={({ item }) => (
                     <View style={styles.card}>
-                        <Image source={{ uri: item.imagePath }} style={styles.cardImage} />
+                        {/* Dynamic absolute link resolution targeting local server system configurations */}
+                        <Image source={{ uri: getFullImageUrl(item.imagePath) }} style={styles.cardImage} />
                         <View style={styles.cardInfoRow}>
                             <View style={styles.cardTextContainer}>
                                 <View style={styles.cardHeaderRow}>

@@ -32,6 +32,15 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// PostgreSQL Driver for Gradle
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Extra dependencies for Spring Security and JSON Web Token (JWT) management
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' // Allows JJWT to use Jackson for JSON processing
 }
 
 test {
