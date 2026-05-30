@@ -46,6 +46,15 @@ public class Observation {
     /* Category ID linking this observation to a species category (e.g., Mammals, Birds, Insects) */
     private int categoryId;
 
+    /* Privacy setting configuring visibility (e.g., PUBLIC, PRIVATE, FRIENDS) */
+    @Column(nullable = false)
+    private String privacySetting = "PUBLIC";
+
+    /* Relational linkage tying this observation metadata record directly to its creating user account */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     /* JPA lifecycle callback that automatically sets the timestamp to the current date/time when the observation is first persisted to the database. */
     @PrePersist
     protected void onCreate() {

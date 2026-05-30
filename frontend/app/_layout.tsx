@@ -1,71 +1,71 @@
-import { Tabs } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getToken } from '@/auth/tokenStorage';
 
-/* TabRoot component that defines the bottom tab navigation structure. Renders 5 main navigation tabs: Camera, Gallery, Home, Settings, and User. Uses the current theme colors for styling the tab bar. */
-function TabRoot() {
+function RootNavigator() {
     const { colors } = useTheme();
+
+    const [loading, setLoading] = useState(true);
+    const [authenticated, setAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const token = await getToken();
+
+                if (token) {
+                    setAuthenticated(true);
+                } else {
+                    setAuthenticated(false);
+                }
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                setAuthenticated(false);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void checkAuth();
+    }, []);
+
+    if (loading) {
+        return (
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: colors.background,
+                }}
+            >
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
+
     return (
-        <Tabs screenOptions={{
-            headerShown: false,
-            tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-            tabBarActiveTintColor: colors.primary,
-            tabBarInactiveTintColor: colors.textMain,
-        }}>
-            <Tabs.Screen
-                name="camera"
+        <Stack screenOptions={{ headerShown: false }}>
+            {/* Kaikki reitit rekisteröidään normaalisti */}
+            <Stack.Screen name="loginscreen" />
+
+            {/* Suojatut tabit */}
+            <Stack.Screen
+                name="(tabs)"
                 options={{
-                    title: 'Camera',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="camera" size={size} color={color} />
-                    )
+                    gestureEnabled: false,
                 }}
             />
-            <Tabs.Screen
-                name="gallery"
-                options={{
-                    title: 'Gallery',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="image-multiple" size={size} color={color} />
-                    )
-                }}
-            />
-            <Tabs.Screen
-                name="index"
-                options={{
-                    title: 'Home',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="home" size={size} color={color} />
-                    )
-                }}
-            />
-            <Tabs.Screen
-                name="settings"
-                options={{
-                    title: 'Settings',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="cog" size={size} color={color} />
-                    )
-                }}
-            />
-            <Tabs.Screen
-                name="user"
-                options={{
-                    title: 'User',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="account" size={size} color={color} />
-                    )
-                }}
-            />
-        </Tabs>
+        </Stack>
     );
 }
 
-/* Main layout component for the entire app. Wraps the tab navigation with ThemeProvider to enable theme support throughout the app. Exported as the default layout for the Expo Router navigation system. */
-export default function TabLayout() {
+export default function RootLayout() {
     return (
         <ThemeProvider>
-            <TabRoot />
+            <RootNavigator />
         </ThemeProvider>
     );
 }

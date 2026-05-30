@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Text, View, FlatList, Image, ActivityIndicator, TouchableOpacity, Alert, Modal, ScrollView, TextInput } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
-import ObservationForm from '../components/ObservationForm';
+import ObservationForm from '../../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 import { CATEGORIES } from "@/constants/categories";

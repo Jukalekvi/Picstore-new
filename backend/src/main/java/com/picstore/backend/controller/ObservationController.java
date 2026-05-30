@@ -1,11 +1,14 @@
 package com.picstore.backend.controller;
 
 import com.picstore.backend.model.Observation;
+import com.picstore.backend.model.User;
 import com.picstore.backend.repository.ObservationRepository;
+import com.picstore.backend.repository.UserRepository;
+import com.picstore.backend.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -18,25 +21,35 @@ import java.util.UUID;
 
 /* REST API controller for handling all observation-related HTTP requests and binary file uploads. */
 @RestController
-@RequestMapping("api/observations")
+@RequestMapping("/api/observations")
 @RequiredArgsConstructor
 public class ObservationController {
 
     private final ObservationRepository observationRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    /* Injects the permanent storage location configuration from application.properties */
     @Value("${upload.path}")
     private String uploadPath;
 
-    /* Retrieves all observations from the database. */
+    /* ONLY USER'S OWN OBSERVATIONS */
     @GetMapping
-    public List<Observation> findAll() {
-        return observationRepository.findAll();
+    public ResponseEntity<List<Observation>> findAll(@RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.replace("Bearer ", "");
+        String username = jwtService.extractUsername(token);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Observation> observations = observationRepository.findByUser(user);
+
+        return ResponseEntity.ok(observations);
     }
 
-    /* Creates and saves a new observation record along with its binary image asset. */
     @PostMapping
     public ResponseEntity<Observation> add(
+            @RequestHeader("Authorization") String authHeader,
             @RequestParam("speciesName") String speciesName,
             @RequestParam(value = "categoryId", required = false, defaultValue = "8") int categoryId,
             @RequestParam(value = "description", required = false) String description,
@@ -47,27 +60,27 @@ public class ObservationController {
             @RequestParam("image") MultipartFile file) {
 
         try {
-            // Guarantee that the targeted upload directory exists locally
+            String token = authHeader.replace("Bearer ", "");
+            String username = jwtService.extractUsername(token);
+
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
             File directory = new File(uploadPath);
-            if (!directory.exists() && !directory.mkdirs()) {
-                System.err.println("Warning: Could not create upload directory or it already exists.");
+            if (!directory.exists()) {
+                directory.mkdirs();
             }
 
-            // Generate a unique identifier for the filename to prevent collision errors
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".")
+            String fileExtension = (originalFilename != null && originalFilename.contains("."))
                     ? originalFilename.substring(originalFilename.lastIndexOf("."))
                     : ".png";
+
             String uniqueFilename = UUID.randomUUID() + fileExtension;
 
-            // Secure transfer and writing of the raw asset onto the local storage disk
-            Path targetPath = Paths.get(uploadPath + uniqueFilename);
+            Path targetPath = Paths.get(uploadPath, uniqueFilename);
             Files.copy(file.getInputStream(), targetPath);
 
-            // Construct a clean relative web path served over our WebConfig resource location registry mapping
-            String relativeImageUrl = "/uploads/" + uniqueFilename;
-
-            // Instantiate and populate the domain entity model metadata
             Observation observation = new Observation();
             observation.setSpeciesName(speciesName);
             observation.setCategoryId(categoryId);
@@ -76,64 +89,54 @@ public class ObservationController {
             observation.setLongitude(longitude);
             observation.setCountry(country != null ? country : "Unknown Country");
             observation.setCity(city != null ? city : "Unknown City");
-            observation.setImagePath(relativeImageUrl);
+            observation.setImagePath("/uploads/" + uniqueFilename);
 
-            // Note: setTimestamp is omitted because @PrePersist handles it automatically in the model entity
+            observation.setUser(user);
 
-            Observation savedObservation = observationRepository.save(observation);
-            return ResponseEntity.ok(savedObservation);
+            Observation saved = observationRepository.save(observation);
+
+            return ResponseEntity.ok(saved);
 
         } catch (IOException e) {
-            System.err.println("Failed to store uploaded profile asset: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    /* Deletes an observation record by its ID and cleans up its associated binary image asset from the disk. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteObservation(@PathVariable Long id) {
+
         return observationRepository.findById(id)
                 .map(observation -> {
-                    // 1. Get the relative web image path (e.g., "/uploads/filename.png")
+
                     String imagePath = observation.getImagePath();
 
                     if (imagePath != null && imagePath.contains("/uploads/")) {
-                        // Extract just the filename from the path extension
                         String filename = imagePath.substring(imagePath.lastIndexOf("/") + 1);
-
-                        // Construct the absolute path pointing directly to the file on the physical disk
-                        Path targetFilePath = Paths.get(uploadPath + filename);
+                        Path targetFilePath = Paths.get(uploadPath, filename);
 
                         try {
-                            // Attempt to securely delete the binary asset from the system disk storage
-                            boolean deleted = Files.deleteIfExists(targetFilePath);
-                            if (deleted) {
-                                System.out.println("[File System] Successfully deleted file asset: " + filename);
-                            } else {
-                                System.err.println("[File System] Warning: Target file did not exist on disk: " + filename);
-                            }
+                            Files.deleteIfExists(targetFilePath);
                         } catch (IOException e) {
-                            System.err.println("[File System] Error: Failed to purge file from storage: " + e.getMessage());
-                            // We can choose to continue or return an internal error depending on preference
+                            System.err.println("File delete error: " + e.getMessage());
                         }
                     }
 
-                    // 2. Perform the traditional relational database row removal routine
                     observationRepository.deleteById(id);
                     return ResponseEntity.ok().<Void>build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /* Updates an existing observation record with new descriptive metadata and location privacy configurations. */
     @PutMapping("/{id}")
-    public ResponseEntity<Observation> updateObservation(@PathVariable Long id, @RequestBody Observation details) {
+    public ResponseEntity<Observation> updateObservation(
+            @PathVariable Long id,
+            @RequestBody Observation details) {
+
         return observationRepository.findById(id)
                 .map(observation -> {
+
                     observation.setSpeciesName(details.getSpeciesName());
                     observation.setCategoryId(details.getCategoryId());
-
-                    /* Dynamic updates for new descriptive notes and parameters */
                     observation.setDescription(details.getDescription());
                     observation.setLatitude(details.getLatitude());
                     observation.setLongitude(details.getLongitude());

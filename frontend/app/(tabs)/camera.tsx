@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { Button, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import * as Location from 'expo-location';
 import { useIsFocused } from '@react-navigation/native';
-import ObservationForm from '../components/ObservationForm';
+import ObservationForm from '../../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 
