@@ -1,9 +1,27 @@
 const BASE_URL = "http://192.168.0.121:8080";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let authToken: string | null = null;
 
-export const setAuthToken = (token: string | null) => {
+/**
+ * Lataa token AsyncStoragesta appin käynnistyessä
+ */
+export const loadAuthToken = async () => {
+    const stored = await AsyncStorage.getItem("accessToken");
+    authToken = stored;
+};
+
+/**
+ * Asettaa tokenin muistiin + AsyncStorageen
+ */
+export const setAuthToken = async (token: string | null) => {
     authToken = token;
+
+    if (token) {
+        await AsyncStorage.setItem("accessToken", token);
+    } else {
+        await AsyncStorage.removeItem("accessToken");
+    }
 };
 
 async function request(
@@ -31,7 +49,8 @@ async function request(
         body: options.body ? JSON.stringify(options.body) : undefined,
     });
 
-    const data = await response.json().catch(() => null);
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
 
     if (!response.ok) {
         throw new Error(data?.message || `HTTP ${response.status}`);

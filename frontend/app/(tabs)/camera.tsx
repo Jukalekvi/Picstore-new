@@ -3,11 +3,11 @@ import { useState, useRef } from 'react';
 import { Button, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import * as Location from 'expo-location';
 import { useIsFocused } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ObservationForm from '../../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 
-/* Camera screen component for capturing species observations. Manages camera access, location retrieval, image capture, and submission of observations to the backend. Displays either the camera interface for capturing images or a form for entering species details, now supporting 200-character description strings. */
 export default function CameraScreen() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -21,42 +21,30 @@ export default function CameraScreen() {
     const cameraRef = useRef<CameraView>(null);
     const isFocused = useIsFocused();
 
-    /* Saves a new observation to the backend API using Multipart FormData to support binary image uploads. */
     const saveNewObservation = async (formData: { speciesName: string; description?: string; categoryId: number; country?: string; city?: string; latitude?: number | null; longitude?: number | null }) => {
-
-        // Initialize a new FormData object for the multipart request layout required by the updated backend
+        const token = await AsyncStorage.getItem('accessToken');
         const data = new FormData();
 
-        // Append mandatory textual parameters
         data.append('speciesName', formData.speciesName || 'Unknown Species');
         data.append('categoryId', String(formData.categoryId ?? 8));
 
-        // Only append optional strings if they actually contain data (avoids sending "undefined" as string)
         if (formData.description && formData.description.trim() !== "") {
             data.append('description', formData.description);
         }
 
-        // Resolve location data based on current form states or fallback parameters
         const finalLat = formData.latitude !== undefined ? formData.latitude : latitude;
         const finalLng = formData.longitude !== undefined ? formData.longitude : longitude;
 
-        if (finalLat !== null && finalLat !== undefined) {
-            data.append('latitude', String(finalLat));
-        }
-        if (finalLng !== null && finalLng !== undefined) {
-            data.append('longitude', String(finalLng));
-        }
-
+        if (finalLat !== null && finalLat !== undefined) data.append('latitude', String(finalLat));
+        if (finalLng !== null && finalLng !== undefined) data.append('longitude', String(finalLng));
         if (formData.country) data.append('country', formData.country);
         if (formData.city) data.append('city', formData.city);
 
-        // Prepare and append the binary image asset if it exists locally inside temporary execution caches
         if (image) {
             const filename = image.split('/').pop() || 'observation.png';
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : `image/png`;
 
-            // Enforce the specific object abstraction required by React Native to stream actual files via fetch
             data.append('image', {
                 uri: image,
                 name: filename,
@@ -68,21 +56,21 @@ export default function CameraScreen() {
         }
 
         try {
-            /* Forward the processed multipart stream payload containing textual strings and binary attachments */
             const response = await fetch('http://192.168.0.121:8080/api/observations', {
                 method: 'POST',
-                body: data,
                 headers: {
-                    // MUST BE EMPTY: Let fetch set the boundary automatically for multipart data
+                    'Authorization': `Bearer ${token}`
                 },
+                body: data,
             });
 
             if (response.ok) {
                 Alert.alert("Success", "Observation saved!");
                 resetForm();
             } else {
-                // Let's print the error status code to help debug what the backend didn't like
+                const errorText = await response.text();
                 console.log("[Backend Error Status]:", response.status);
+                console.log("[Backend Error Body]:", errorText);
                 Alert.alert("Error", `Failed to save observation. (Status: ${response.status})`);
             }
         } catch (error) {
@@ -91,7 +79,6 @@ export default function CameraScreen() {
         }
     };
 
-    /* Captures a photo using the camera and retrieves GPS location data. Requests location permission if not already granted and fetches current position. Updates the image state with the captured photo URI for preview in the form. */
     const takePicture = async () => {
         if (cameraRef.current) {
             try {
@@ -111,17 +98,14 @@ export default function CameraScreen() {
         }
     };
 
-    /* Resets the form state to clear the captured image and location data. Called after successful observation submission or when user cancels the form. */
     const resetForm = () => {
         setImage(null);
         setLatitude(null);
         setLongitude(null);
     };
 
-    // Show permission request if camera permission hasn't been determined
     if (!permission) return <View style={styles.container} />;
 
-    // Show permission denied message and grant button
     if (!permission.granted) {
         return (
             <View style={styles.container}>
@@ -133,17 +117,15 @@ export default function CameraScreen() {
         );
     }
 
-    // Show form after taking a picture (allows user to enter species details and select category)
     if (image) {
         return (
             <ScrollView style={styles.container}>
                 <View style={styles.formWrapper}>
                     <Text style={styles.modalTitle}>New Observation</Text>
-                    {/* Integrated description initialization and shared raw coordinates layout parameters safely */}
                     <ObservationForm
                         initialData={{
                             speciesName: '',
-                            description: '', /* Initialize description string as empty for new creation forms */
+                            description: '',
                             imagePath: image,
                             latitude: latitude,
                             longitude: longitude
@@ -157,7 +139,6 @@ export default function CameraScreen() {
         );
     }
 
-    // Show camera interface for capturing pictures
     return (
         <View style={styles.container}>
             <View style={styles.formWrapper}>

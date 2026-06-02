@@ -6,6 +6,8 @@ import com.picstore.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,38 +15,31 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final AuthenticationManager authenticationManager;
+    private final UserDetailsService userDetailsService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
+
+    public UserDetails authenticate(String email, String password) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+        );
+
+        return userDetailsService.loadUserByUsername(email);
+    }
 
     public void register(RegisterRequest request) {
 
-        if (userRepository.existsByUsername(request.username)) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        if (userRepository.existsByEmail(request.email)) {
-            throw new RuntimeException("Email already exists");
-        }
-
         User user = new User();
-        user.setUsername(request.username);
         user.setEmail(request.email);
+        user.setUsername(request.username);
         user.setPassword(passwordEncoder.encode(request.password));
 
         userRepository.save(user);
     }
 
-    public String login(String username, String password) {
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-        );
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return jwtService.generateToken(user);
+    public UserDetails loadUser(String email) {
+        return userDetailsService.loadUserByUsername(email);
     }
 }
