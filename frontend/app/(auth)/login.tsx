@@ -34,23 +34,22 @@ export default function LoginScreen() {
                 password,
             });
 
-            console.log('LOGIN RESPONSE:', response);
-
-            const accessToken = response.accessToken;
-            const refreshToken = response.refreshToken;
+            const { accessToken, refreshToken } = response;
 
             if (!accessToken) {
-                throw new Error('No accessToken in response');
+                setError('No access token received');
+                setLoading(false);
+                return;
             }
 
-            // 1. persist storage
+            // Persistence
             await AsyncStorage.setItem('accessToken', accessToken);
             await AsyncStorage.setItem('refreshToken', refreshToken);
 
-            // 2. memory token (API client)
-            setAuthToken(accessToken);
+            // Memory
+            await setAuthToken(accessToken);
 
-            // 3. IMPORTANT: direct navigation (DO NOT go through index)
+            // Navigation
             router.replace('/(tabs)');
 
         } catch (err: any) {
@@ -62,7 +61,7 @@ export default function LoginScreen() {
     };
 
     return (
-        <View style={[styles.container, { justifyContent: 'center', padding: 20 }]}>
+        <View style={[styles.container, styles.screenPadding, { justifyContent: 'center' }]}>
 
             <Text style={[styles.mainTitle, { marginBottom: 30 }]}>
                 Picstore Login
@@ -75,6 +74,7 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
+                keyboardType="email-address"
             />
 
             <TextInput
@@ -87,7 +87,7 @@ export default function LoginScreen() {
             />
 
             {error && (
-                <Text style={{ color: colors.danger, marginBottom: 10 }}>
+                <Text style={{ color: colors.danger, marginBottom: 10, textAlign: 'center' }}>
                     {error}
                 </Text>
             )}
@@ -96,7 +96,7 @@ export default function LoginScreen() {
                 style={[
                     styles.buttonBase,
                     styles.buttonPrimary,
-                    { marginTop: 10, height: 64, maxHeight: 64 }
+                    { maxHeight: 64 }
                 ]}
                 onPress={handleLogin}
                 disabled={loading}
@@ -106,6 +106,15 @@ export default function LoginScreen() {
                 ) : (
                     <Text style={styles.buttonTextLight}>Login</Text>
                 )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={{ marginTop: 20, alignItems: 'center' }}
+                onPress={() => router.push('/(auth)/register')}
+            >
+                <Text style={{ color: colors.textMain }}>
+                    Need an account? <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Register</Text>
+                </Text>
             </TouchableOpacity>
 
         </View>

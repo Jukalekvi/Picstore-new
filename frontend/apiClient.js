@@ -1,6 +1,6 @@
-import { getToken } from "./auth/tokenStorage";
+import { getToken } from "./lib/tokenStorage";
 
-const BASE_URL = "http://YOUR_IP:8080";
+const BASE_URL = "http://192.168.0.121:8080";
 
 /* Core API client that automatically attaches JWT token to every request */
 export const apiRequest = async (endpoint, options = {}) => {
@@ -24,7 +24,6 @@ export const apiRequest = async (endpoint, options = {}) => {
         // Handle expired/invalid token
         if (response.status === 401) {
             console.warn("Unauthorized - token may be expired");
-            // myöhemmin: deleteToken + redirect login
         }
 
         const contentType = response.headers.get("content-type");

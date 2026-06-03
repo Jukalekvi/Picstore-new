@@ -1,6 +1,6 @@
 package com.picstore.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // TÄMÄ IMPORT ON TÄRKEÄ
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,7 +39,6 @@ public class Observation {
     @Column(nullable = false)
     private String privacySetting = "PUBLIC";
 
-    // LISÄTTY @JsonIgnore estämään "no Session" -virhe
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

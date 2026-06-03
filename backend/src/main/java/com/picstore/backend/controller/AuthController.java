@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/auth")
@@ -21,7 +23,6 @@ public class AuthController {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
-    // LOGIN
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
 
@@ -38,7 +39,6 @@ public class AuthController {
         );
     }
 
-    // REFRESH ACCESS TOKEN
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest request) {
 
@@ -53,7 +53,6 @@ public class AuthController {
         );
     }
 
-    // LOGOUT
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody RefreshRequest request) {
 
@@ -62,12 +61,13 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    // REGISTER
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-
-        authService.register(request);
-
-        return ResponseEntity.ok("User created");
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            authService.register(request);
+            return ResponseEntity.ok(Collections.singletonMap("message", "User created"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Registration failed: " + e.getMessage()));
+        }
     }
 }

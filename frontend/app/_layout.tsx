@@ -2,45 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function RootNavigator() {
     const { colors } = useTheme();
-
     const [loading, setLoading] = useState(true);
-    const [authenticated, setAuthenticated] = useState(false);
 
     useEffect(() => {
         const initAuth = async () => {
             try {
-                const token = await AsyncStorage.getItem('accessToken');
-
-                if (token) {
-                    setAuthenticated(true);
-                } else {
-                    setAuthenticated(false);
-                }
+                await new Promise(resolve => setTimeout(resolve, 500));
             } catch (e) {
                 console.error('Auth check failed', e);
-                setAuthenticated(false);
             } finally {
                 setLoading(false);
             }
         };
 
-        initAuth();
+        initAuth().catch(console.error);
     }, []);
 
     if (loading) {
         return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: colors.background,
-                }}
-            >
+            <View style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: colors.background,
+            }}>
                 <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
@@ -48,11 +36,8 @@ function RootNavigator() {
 
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            {!authenticated ? (
-                <Stack.Screen name="loginscreen" />
-            ) : (
-                <Stack.Screen name="(tabs)" />
-            )}
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
         </Stack>
     );
 }

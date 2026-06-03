@@ -19,7 +19,7 @@ export async function loadAuthState(): Promise<boolean> {
 
         return true;
     } catch (error) {
-        console.error('Failed to load auth state:', error);
+        console.error('Failed to load (auth) state:', error);
         return false;
     }
 }

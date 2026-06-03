@@ -22,7 +22,7 @@ export default function User() {
                     onPress: async () => {
                         try {
                             await AsyncStorage.removeItem('token');
-                            router.replace('/loginscreen' as any);
+                            router.replace('/login' as any);
                         } catch (error) {
                             console.error("Logout error:", error);
                             Alert.alert("Error", "Failed to log out.");
@@ -43,7 +43,6 @@ export default function User() {
                 </Text>
             </View>
 
-            {/* Käytetään cameraButtonContainer-tyyliä napin kääreenä, jotta se on samanlainen kuin kamerassa */}
             <View style={styles.cameraButtonContainer}>
                 <TouchableOpacity
                     style={[styles.buttonBase, styles.buttonDanger]}

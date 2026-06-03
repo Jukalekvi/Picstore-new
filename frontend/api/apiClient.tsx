@@ -3,17 +3,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let authToken: string | null = null;
 
-/**
- * Lataa token AsyncStoragesta appin käynnistyessä
- */
 export const loadAuthToken = async () => {
     const stored = await AsyncStorage.getItem("accessToken");
     authToken = stored;
 };
 
-/**
- * Asettaa tokenin muistiin + AsyncStorageen
- */
 export const setAuthToken = async (token: string | null) => {
     authToken = token;
 
