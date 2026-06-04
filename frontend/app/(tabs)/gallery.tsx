@@ -22,7 +22,7 @@ interface Observation {
 }
 
 type SortMode = 'newest' | 'oldest' | 'alphabetical';
-const BASE_URL = 'http://192.168.0.121:8080';
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export default function Gallery() {
     const { colors } = useTheme();

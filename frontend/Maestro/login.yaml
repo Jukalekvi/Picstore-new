@@ -1,0 +1,9 @@
+appId: host.exp.exponent
+---
+- launchApp
+- tapOn: "Käyttäjätunnus"
+- inputText: "jukka"
+- tapOn: "Salasana"
+- inputText: "salasana123"
+- tapOn: "Kirjaudu"
+- assertVisible: "Profiili" # Varmista, että kirjautuminen onnistui

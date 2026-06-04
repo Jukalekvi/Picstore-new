@@ -1,4 +1,4 @@
-const BASE_URL = "http://192.168.0.121:8080";
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let authToken: string | null = null;
@@ -44,9 +44,21 @@ async function request(
     });
 
     const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    let data: any = null;
+
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = text;
+        }
+    }
 
     if (!response.ok) {
+        if (typeof data === "string") {
+            throw new Error(data || `HTTP ${response.status}`);
+        }
+
         throw new Error(data?.message || `HTTP ${response.status}`);
     }
 

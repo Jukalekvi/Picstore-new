@@ -56,7 +56,7 @@ export default function CameraScreen() {
         }
 
         try {
-            const response = await fetch('http://192.168.0.121:8080/api/observations', {
+            const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/observations`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
