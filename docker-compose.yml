@@ -1,0 +1,49 @@
+services:
+  web:
+    image: picstore-backend:latest
+    container_name: picstore-web
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-picstore}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-picstore}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      UPLOAD_PATH: /app/uploads/
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - backend_uploads:/app/uploads
+    networks:
+      - picstore
+
+  db:
+    image: postgres:16-alpine
+    container_name: picstore-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-picstore}
+      POSTGRES_USER: ${POSTGRES_USER:-picstore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - picstore
+
+volumes:
+  postgres_data:
+  backend_uploads:
+
+networks:
+  picstore:
+    driver: bridge

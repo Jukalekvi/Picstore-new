@@ -1,0 +1,7 @@
+appId: com.anonymous.Frontend
+---
+- launchApp
+- tapOn: "Lisää kuva"
+- tapOn: "Valitse galleriasta"
+- tapOn: "Kuva 1"
+- tapOn: "Tallenna"

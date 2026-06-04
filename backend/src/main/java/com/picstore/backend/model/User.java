@@ -32,13 +32,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    /* Spring Security authority mapping. Standard users will default to a basic USER role profile. */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(() -> "ROLE_USER");
     }
 
-    /* Spring Security uses the email field as the primary unique identifier for login routing */
     @Override
     public String getUsername() {
         return email;

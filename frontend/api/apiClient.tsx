@@ -1,9 +1,21 @@
-const BASE_URL = "http://192.168.0.121:8080";
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let authToken: string | null = null;
 
-export const setAuthToken = (token: string | null) => {
+export const loadAuthToken = async () => {
+    const stored = await AsyncStorage.getItem("accessToken");
+    authToken = stored;
+};
+
+export const setAuthToken = async (token: string | null) => {
     authToken = token;
+
+    if (token) {
+        await AsyncStorage.setItem("accessToken", token);
+    } else {
+        await AsyncStorage.removeItem("accessToken");
+    }
 };
 
 async function request(
@@ -31,9 +43,22 @@ async function request(
         body: options.body ? JSON.stringify(options.body) : undefined,
     });
 
-    const data = await response.json().catch(() => null);
+    const text = await response.text();
+    let data: any = null;
+
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = text;
+        }
+    }
 
     if (!response.ok) {
+        if (typeof data === "string") {
+            throw new Error(data || `HTTP ${response.status}`);
+        }
+
         throw new Error(data?.message || `HTTP ${response.status}`);
     }
 

@@ -1,9 +1,16 @@
 package com.picstore.backend.auth;
 
-public class AuthResponse {
-    public String token;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-    public AuthResponse(String token) {
-        this.token = token;
-    }
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+
+    private String accessToken;
+    private String refreshToken;
 }
