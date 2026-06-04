@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# build.gradle uses Java 21, and gradle-wrapper.properties pins Gradle 9.5.0.
+# build.gradle uses Java 21, and gradle-wrapper.properties pins Gradle 8.12.
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
