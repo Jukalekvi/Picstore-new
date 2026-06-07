@@ -1,4 +1,4 @@
-name: Deploy backend
+name: Picstore CI/CD
 
 on:
   push:
@@ -6,11 +6,64 @@ on:
       - main
       - master
       - dev
+  pull_request:
+    branches:
+      - main
+      - master
+      - dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: picstore-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  backend-tests:
+    name: Backend tests
+    runs-on: self-hosted
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+          cache-dependency-path: |
+            backend/*.gradle
+            backend/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Run backend tests
+        run: ./gradlew --no-daemon test -Pspring.profiles.active=test
+
+      - name: Upload backend test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/build/reports/tests/test
+            backend/build/test-results/test
+          retention-days: 7
+
   deploy:
     name: Build and restart backend
     runs-on: self-hosted
+    needs: backend-tests
+    if: github.event_name == 'push'
 
     env:
       POSTGRES_DB: picstore

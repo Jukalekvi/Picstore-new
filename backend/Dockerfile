@@ -13,7 +13,7 @@ RUN ./gradlew dependencies --no-daemon
 
 COPY src ./src
 
-RUN ./gradlew clean bootJar -x test --no-daemon \
+RUN ./gradlew clean build -Pspring.profiles.active=test --no-daemon \
     && JAR_FILE="$(find build/libs -type f -name '*.jar' ! -name '*-plain.jar' | head -n 1)" \
     && cp "$JAR_FILE" app.jar
 
