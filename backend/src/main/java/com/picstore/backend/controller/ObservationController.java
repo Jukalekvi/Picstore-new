@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/observations")
@@ -47,7 +46,7 @@ public class ObservationController {
         return findAuthenticatedUser(authHeader)
                 .map(user -> ResponseEntity.ok(observationRepository.findByUser(user).stream()
                         .map(this::toDto)
-                        .collect(Collectors.toList())))
+                        .toList()))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
