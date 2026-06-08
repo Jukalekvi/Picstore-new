@@ -2,7 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.5'
 	id 'io.spring.dependency-management' version '1.1.6'
-	id "org.owasp.dependencycheck" version "10.0.4"
+	id 'org.sonarqube' version '7.3.1.8318'
+	id 'org.owasp.dependencycheck' version '12.2.2'
 }
 
 group = 'com.picstore'
@@ -44,8 +45,39 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' // Allows JJWT to use Jackson for JSON processing
 }
 
+sonar {
+	properties {
+		property 'sonar.projectKey', 'picstore-backend'
+		property 'sonar.projectName', 'Picstore Backend'
+		property 'sonar.projectVersion', project.version
+		property 'sonar.gradle.scanAll', 'true'
+		property 'sonar.qualitygate.wait', 'true'
+	}
+}
+
+dependencyCheck {
+	failBuildOnCVSS = 7.0
+	junitFailOnCVSS = 7.0
+	formats = ['HTML', 'JSON', 'JUNIT']
+	outputDirectory = layout.buildDirectory.dir('reports/dependency-check').get().asFile.toString()
+	scanSet = [
+		'src/main/resources',
+		'../frontend/package.json',
+		'../frontend/package-lock.json'
+	]
+	data.directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
+	analyzers.ossIndex.enabled = false
+
+	if (System.getenv('NVD_API_KEY')) {
+		nvd.apiKey = System.getenv('NVD_API_KEY')
+	}
+}
+
 test {
 	useJUnitPlatform()
+	if (project.hasProperty('spring.profiles.active')) {
+		systemProperty 'spring.profiles.active', project.property('spring.profiles.active')
+	}
 	testLogging {
 		events "passed", "skipped", "failed"
 		showStandardStreams = true
