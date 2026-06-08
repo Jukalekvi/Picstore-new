@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
-import java.util.Collections;
 
 @RestController
 @RequestMapping("/auth")
@@ -62,12 +61,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
         try {
             authService.register(request);
-            return ResponseEntity.ok(Collections.singletonMap("message", "User created"));
+            return ResponseEntity.ok(Map.of("message", "User created"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Registration failed: " + e.getMessage()));
+            String message = e.getMessage() != null ? e.getMessage() : "Unknown error";
+            return ResponseEntity.badRequest().body(Map.of("error", "Registration failed: " + message));
         }
     }
 }

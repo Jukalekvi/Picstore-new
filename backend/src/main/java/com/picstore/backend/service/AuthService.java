@@ -32,14 +32,14 @@ public class AuthService {
     public void register(RegisterRequest request) {
 
         User user = new User();
-        user.setEmail(request.email);
-        user.setUsername(request.username);
-        user.setPassword(passwordEncoder.encode(request.password));
+        user.setEmail(request.email());
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password()));
 
         userRepository.save(user);
     }
 
-    public UserDetails loadUser(String email) {
-        return userDetailsService.loadUserByUsername(email);
+    public UserDetails loadUser(String loginIdentifier) {
+        return userDetailsService.loadUserByUsername(loginIdentifier);
     }
 }
