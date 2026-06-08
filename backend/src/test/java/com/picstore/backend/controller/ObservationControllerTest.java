@@ -1,5 +1,7 @@
 package com.picstore.backend.controller;
 
+import com.picstore.backend.dto.ObservationDto;
+import com.picstore.backend.dto.ObservationUpdateRequest;
 import com.picstore.backend.model.Observation;
 import com.picstore.backend.model.User;
 import com.picstore.backend.repository.ObservationRepository;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,19 +79,19 @@ class ObservationControllerTest {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(observationRepository.findByUser(user)).thenReturn(List.of(obs1, obs2));
 
-        ResponseEntity<List<Observation>> response = observationController.findAll(AUTH_HEADER);
+        ResponseEntity<List<ObservationDto>> response = observationController.findAll(AUTH_HEADER);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals(2, response.getBody().size());
-        assertEquals("Bird", response.getBody().getFirst().getSpeciesName());
+        assertEquals("Bird", response.getBody().getFirst().speciesName());
         verify(observationRepository).findByUser(user);
         verify(observationRepository, never()).findAll();
     }
 
     @Test
     void findAll_ShouldReturnUnauthorizedWhenAuthHeaderIsMissing() {
-        ResponseEntity<List<Observation>> response = observationController.findAll(null);
+        ResponseEntity<List<ObservationDto>> response = observationController.findAll(null);
 
         assertEquals(401, response.getStatusCode().value());
         assertNull(response.getBody());
@@ -96,7 +99,7 @@ class ObservationControllerTest {
     }
 
     @Test
-    void add_ShouldSaveUploadedObservationForAuthenticatedUser() throws Exception {
+    void add_ShouldSaveUploadedObservationForAuthenticatedUser() {
         MockMultipartFile file = new MockMultipartFile(
                 "image",
                 "bird.jpg",
@@ -112,7 +115,7 @@ class ObservationControllerTest {
             return saved;
         });
 
-        ResponseEntity<?> response = observationController.add(
+        ResponseEntity<ObservationDto> response = observationController.add(
                 AUTH_HEADER,
                 "Insect",
                 4,
@@ -125,23 +128,23 @@ class ObservationControllerTest {
         );
 
         assertEquals(200, response.getStatusCode().value());
-        assertInstanceOf(Observation.class, response.getBody());
+        assertNotNull(response.getBody());
 
-        Observation result = (Observation) response.getBody();
-        assertEquals(1L, result.getId());
-        assertEquals("Insect", result.getSpeciesName());
-        assertEquals(4, result.getCategoryId());
-        assertEquals("Small garden visitor", result.getDescription());
-        assertEquals(60.1699, result.getLatitude());
-        assertEquals(24.9384, result.getLongitude());
-        assertEquals("Finland", result.getCountry());
-        assertEquals("Helsinki", result.getCity());
-        assertEquals(user, result.getUser());
-        assertNotNull(result.getImagePath());
-        assertTrue(result.getImagePath().startsWith("/uploads/"));
-        assertTrue(result.getImagePath().endsWith(".jpg"));
+        ObservationDto result = response.getBody();
+        assertEquals(1L, result.id());
+        assertEquals("Insect", result.speciesName());
+        assertEquals(4, result.categoryId());
+        assertEquals("Small garden visitor", result.description());
+        assertEquals(60.1699, result.latitude());
+        assertEquals(24.9384, result.longitude());
+        assertEquals("Finland", result.country());
+        assertEquals("Helsinki", result.city());
+        assertEquals(user.getId(), result.userId());
+        assertNotNull(result.imagePath());
+        assertTrue(result.imagePath().startsWith("/uploads/"));
+        assertTrue(result.imagePath().endsWith(".jpg"));
 
-        String uploadedFileName = result.getImagePath().substring(result.getImagePath().lastIndexOf("/") + 1);
+        String uploadedFileName = result.imagePath().substring(result.imagePath().lastIndexOf("/") + 1);
         assertTrue(Files.exists(uploadDir.resolve(uploadedFileName)));
 
         ArgumentCaptor<Observation> captor = ArgumentCaptor.forClass(Observation.class);
@@ -158,7 +161,7 @@ class ObservationControllerTest {
                 "image-data".getBytes(StandardCharsets.UTF_8)
         );
 
-        ResponseEntity<?> response = observationController.add(
+        ResponseEntity<ObservationDto> response = observationController.add(
                 null,
                 "Bird",
                 8,
@@ -171,7 +174,7 @@ class ObservationControllerTest {
         );
 
         assertEquals(401, response.getStatusCode().value());
-        assertEquals("Authorization header missing", response.getBody());
+        assertNull(response.getBody());
         verifyNoInteractions(jwtService, userRepository, observationRepository);
     }
 
@@ -184,41 +187,53 @@ class ObservationControllerTest {
         existingObs.setCategoryId(8);
         existingObs.setUser(user);
 
-        Observation details = new Observation();
-        details.setSpeciesName("New Name");
-        details.setCategoryId(2);
-        details.setDescription("Updated description");
-        details.setLatitude(61.0);
-        details.setLongitude(25.0);
-        details.setCountry("Finland");
-        details.setCity("Tampere");
+        ObservationUpdateRequest details = new ObservationUpdateRequest(
+                "New Name",
+                2,
+                "Updated description",
+                61.0,
+                25.0,
+                "Finland",
+                "Tampere"
+        );
 
+        when(jwtService.extractUsername("test-token")).thenReturn(EMAIL);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(observationRepository.findById(obsId)).thenReturn(Optional.of(existingObs));
         when(observationRepository.save(any(Observation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<Observation> response = observationController.updateObservation(AUTH_HEADER, obsId, details);
+        ResponseEntity<ObservationDto> response = observationController.updateObservation(AUTH_HEADER, obsId, details);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("New Name", response.getBody().getSpeciesName());
-        assertEquals(2, response.getBody().getCategoryId());
-        assertEquals("Updated description", response.getBody().getDescription());
-        assertEquals(61.0, response.getBody().getLatitude());
-        assertEquals(25.0, response.getBody().getLongitude());
-        assertEquals("Finland", response.getBody().getCountry());
-        assertEquals("Tampere", response.getBody().getCity());
+        assertEquals("New Name", response.getBody().speciesName());
+        assertEquals(2, response.getBody().categoryId());
+        assertEquals("Updated description", response.getBody().description());
+        assertEquals(61.0, response.getBody().latitude());
+        assertEquals(25.0, response.getBody().longitude());
+        assertEquals("Finland", response.getBody().country());
+        assertEquals("Tampere", response.getBody().city());
         verify(observationRepository).save(existingObs);
     }
 
     @Test
     void updateObservation_ShouldReturnNotFoundWhenIdDoesNotExist() {
         Long obsId = 999L;
-        Observation details = new Observation();
-        details.setSpeciesName("Ghost Species");
+        ObservationUpdateRequest details = new ObservationUpdateRequest(
+                "Ghost Species",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
+        when(jwtService.extractUsername("test-token")).thenReturn(EMAIL);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(observationRepository.findById(obsId)).thenReturn(Optional.empty());
 
-        ResponseEntity<Observation> response = observationController.updateObservation(AUTH_HEADER, obsId, details);
+        ResponseEntity<ObservationDto> response = observationController.updateObservation(AUTH_HEADER, obsId, details);
 
         assertEquals(404, response.getStatusCode().value());
         assertNull(response.getBody());
@@ -226,7 +241,7 @@ class ObservationControllerTest {
     }
 
     @Test
-    void deleteObservation_ShouldDeleteObservationAndUploadedImageWhenFound() throws Exception {
+    void deleteObservation_ShouldDeleteObservationAndUploadedImageWhenFound() throws IOException {
         Long obsId = 1L;
         Path uploadedFile = uploadDir.resolve("bird.jpg");
         Files.writeString(uploadedFile, "image-data");
@@ -236,6 +251,8 @@ class ObservationControllerTest {
         existingObs.setImagePath("/uploads/bird.jpg");
         existingObs.setUser(user);
 
+        when(jwtService.extractUsername("test-token")).thenReturn(EMAIL);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(observationRepository.findById(obsId)).thenReturn(Optional.of(existingObs));
 
         ResponseEntity<Void> response = observationController.deleteObservation(AUTH_HEADER, obsId);
@@ -248,6 +265,8 @@ class ObservationControllerTest {
     @Test
     void deleteObservation_ShouldReturnNotFoundWhenIdDoesNotExist() {
         Long obsId = 999L;
+        when(jwtService.extractUsername("test-token")).thenReturn(EMAIL);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
         when(observationRepository.findById(obsId)).thenReturn(Optional.empty());
 
         ResponseEntity<Void> response = observationController.deleteObservation(AUTH_HEADER, obsId);

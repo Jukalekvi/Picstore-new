@@ -13,6 +13,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-picstore}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-picstore}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8081,http://localhost:19006}
       UPLOAD_PATH: /app/uploads/
     ports:
       - "${BACKEND_PORT:-8080}:8080"

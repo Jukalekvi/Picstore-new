@@ -3,11 +3,14 @@ package com.picstore.backend.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,17 +19,28 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    /* High-entropy signing key logic. In production, this should be injected from environment variables. */
-    private static final String SECRET_STRING = "your-very-secure-and-extremely-long-secret-key-spec-2026";
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+    private static final long JWT_EXPIRATION_MS = 1000L * 60 * 60 * 24;
+
+    private final SecretKey key;
+    private final Clock clock = Clock.systemUTC();
+
+    public JwtService(@Value("${jwt.secret}") String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.length() < 32) {
+            throw new IllegalStateException("JWT signing key must be at least 32 characters long");
+        }
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
 
     /* Generates a secure token based on the UserDetails payload */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
+        Instant issuedAt = Instant.now(clock);
+        Instant expiration = issuedAt.plusMillis(JWT_EXPIRATION_MS);
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername()) // now maps to username (login identifier)                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // Token valid for 24 hours
+                .subject(userDetails.getUsername())
+                .issuedAt(Date.from(issuedAt))
+                .expiration(Date.from(expiration))
                 .signWith(key)
                 .compact();
     }
@@ -43,7 +57,7 @@ public class JwtService {
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token).toInstant().isBefore(Instant.now(clock));
     }
 
     private Date extractExpiration(String token) {
