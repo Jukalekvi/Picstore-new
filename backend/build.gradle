@@ -16,6 +16,12 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 21
 }
 
 repositories {
@@ -55,6 +61,11 @@ sonar {
 		property 'sonar.projectVersion', project.version
 		property 'sonar.gradle.scanAll', 'true'
 		property 'sonar.qualitygate.wait', 'true'
+		property 'sonar.java.source', '21'
+		property 'sonar.java.target', '21'
+		property 'sonar.java.binaries', layout.buildDirectory.dir('classes/java/main').get().asFile
+		property 'sonar.java.test.binaries', layout.buildDirectory.dir('classes/java/test').get().asFile
+		property 'sonar.junit.reportPaths', layout.buildDirectory.dir('test-results/test').get().asFile
 	}
 }
 
@@ -86,4 +97,8 @@ test {
 		showStandardStreams = true
 		exceptionFormat = 'full'
 	}
+}
+
+tasks.named('sonar') {
+	dependsOn tasks.named('test')
 }
