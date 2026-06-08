@@ -4,6 +4,7 @@ import com.picstore.backend.auth.LoginRequest;
 import com.picstore.backend.auth.RegisterRequest;
 import com.picstore.backend.auth.AuthResponse;
 import com.picstore.backend.auth.RefreshRequest;
+import com.picstore.backend.model.RefreshToken;
 import com.picstore.backend.service.AuthService;
 import com.picstore.backend.service.JwtService;
 import com.picstore.backend.service.RefreshTokenService;
@@ -41,7 +42,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest request) {
 
-        var refresh = refreshTokenService.verify(request.getRefreshToken());
+        RefreshToken refresh = refreshTokenService.verify(request.getRefreshToken());
 
         UserDetails user = authService.loadUser(refresh.getUsername());
 

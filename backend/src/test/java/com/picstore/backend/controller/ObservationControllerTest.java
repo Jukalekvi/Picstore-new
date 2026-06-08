@@ -84,7 +84,7 @@ class ObservationControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals(2, response.getBody().size());
-        assertEquals("Bird", response.getBody().getFirst().speciesName());
+        assertEquals("Bird", response.getBody().get(0).getSpeciesName());
         verify(observationRepository).findByUser(user);
         verify(observationRepository, never()).findAll();
     }
@@ -131,20 +131,20 @@ class ObservationControllerTest {
         assertNotNull(response.getBody());
 
         ObservationDto result = response.getBody();
-        assertEquals(1L, result.id());
-        assertEquals("Insect", result.speciesName());
-        assertEquals(4, result.categoryId());
-        assertEquals("Small garden visitor", result.description());
-        assertEquals(60.1699, result.latitude());
-        assertEquals(24.9384, result.longitude());
-        assertEquals("Finland", result.country());
-        assertEquals("Helsinki", result.city());
-        assertEquals(user.getId(), result.userId());
-        assertNotNull(result.imagePath());
-        assertTrue(result.imagePath().startsWith("/uploads/"));
-        assertTrue(result.imagePath().endsWith(".jpg"));
+        assertEquals(1L, result.getId());
+        assertEquals("Insect", result.getSpeciesName());
+        assertEquals(4, result.getCategoryId());
+        assertEquals("Small garden visitor", result.getDescription());
+        assertEquals(60.1699, result.getLatitude());
+        assertEquals(24.9384, result.getLongitude());
+        assertEquals("Finland", result.getCountry());
+        assertEquals("Helsinki", result.getCity());
+        assertEquals(user.getId(), result.getUserId());
+        assertNotNull(result.getImagePath());
+        assertTrue(result.getImagePath().startsWith("/uploads/"));
+        assertTrue(result.getImagePath().endsWith(".jpg"));
 
-        String uploadedFileName = result.imagePath().substring(result.imagePath().lastIndexOf("/") + 1);
+        String uploadedFileName = result.getImagePath().substring(result.getImagePath().lastIndexOf("/") + 1);
         assertTrue(Files.exists(uploadDir.resolve(uploadedFileName)));
 
         ArgumentCaptor<Observation> captor = ArgumentCaptor.forClass(Observation.class);
@@ -206,13 +206,13 @@ class ObservationControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("New Name", response.getBody().speciesName());
-        assertEquals(2, response.getBody().categoryId());
-        assertEquals("Updated description", response.getBody().description());
-        assertEquals(61.0, response.getBody().latitude());
-        assertEquals(25.0, response.getBody().longitude());
-        assertEquals("Finland", response.getBody().country());
-        assertEquals("Tampere", response.getBody().city());
+        assertEquals("New Name", response.getBody().getSpeciesName());
+        assertEquals(2, response.getBody().getCategoryId());
+        assertEquals("Updated description", response.getBody().getDescription());
+        assertEquals(61.0, response.getBody().getLatitude());
+        assertEquals(25.0, response.getBody().getLongitude());
+        assertEquals("Finland", response.getBody().getCountry());
+        assertEquals("Tampere", response.getBody().getCity());
         verify(observationRepository).save(existingObs);
     }
 

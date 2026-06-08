@@ -1,12 +1,20 @@
 package com.picstore.backend.dto;
 
-public record ObservationUpdateRequest(
-        String speciesName,
-        Integer categoryId,
-        String description,
-        Double latitude,
-        Double longitude,
-        String country,
-        String city
-) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ObservationUpdateRequest {
+    private String speciesName;
+    private Integer categoryId;
+    private String description;
+    private Double latitude;
+    private Double longitude;
+    private String country;
+    private String city;
 }

@@ -1,7 +1,12 @@
 package com.picstore.backend.auth;
 
-public record RegisterRequest(
-        String username,
-        String email,
-        String password
-) {}
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class RegisterRequest {
+    private String username;
+    private String email;
+    private String password;
+}

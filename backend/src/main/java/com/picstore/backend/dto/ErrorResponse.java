@@ -1,6 +1,11 @@
 package com.picstore.backend.dto;
 
-public record ErrorResponse(
-        String error,
-        String message
-) {}
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class ErrorResponse {
+    private String error;
+    private String message;
+}
