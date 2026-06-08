@@ -156,17 +156,17 @@ public class ObservationController {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<ObservationDto>build();
                     }
 
-                    if (details.speciesName() != null) {
-                        observation.setSpeciesName(details.speciesName());
+                    if (details.getSpeciesName() != null) {
+                        observation.setSpeciesName(details.getSpeciesName());
                     }
-                    if (details.categoryId() != null) {
-                        observation.setCategoryId(details.categoryId());
+                    if (details.getCategoryId() != null) {
+                        observation.setCategoryId(details.getCategoryId());
                     }
-                    observation.setDescription(details.description());
-                    observation.setLatitude(details.latitude());
-                    observation.setLongitude(details.longitude());
-                    observation.setCountry(details.country());
-                    observation.setCity(details.city());
+                    observation.setDescription(details.getDescription());
+                    observation.setLatitude(details.getLatitude());
+                    observation.setLongitude(details.getLongitude());
+                    observation.setCountry(details.getCountry());
+                    observation.setCity(details.getCity());
                     return ResponseEntity.ok(toDto(observationRepository.save(observation)));
                 })
                 .orElse(ResponseEntity.notFound().build());
