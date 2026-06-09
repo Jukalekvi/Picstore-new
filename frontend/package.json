@@ -8,7 +8,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "e2e:auth-smoke": "maestro test Maestro/auth-smoke.yaml",
+    "e2e:register-login": "maestro test Maestro/register-login.yaml",
+    "e2e:full-journey": "maestro test Maestro/full-journey.yaml",
+    "e2e": "maestro test Maestro"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

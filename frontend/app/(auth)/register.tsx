@@ -46,12 +46,16 @@ export default function RegisterScreen() {
     };
 
     return (
-        <View style={[styles.container, styles.screenPadding, { justifyContent: 'center' }]}>
-            <Text style={[styles.mainTitle, { marginBottom: 30 }]}>
+        <View
+            testID="register-screen"
+            style={[styles.container, styles.screenPadding, { justifyContent: 'center' }]}
+        >
+            <Text testID="register-title" style={[styles.mainTitle, { marginBottom: 30 }]}>
                 Create Account
             </Text>
 
             <TextInput
+                testID="register-username-input"
                 style={styles.input}
                 placeholder="Username"
                 placeholderTextColor={colors.textMain + '80'}
@@ -61,6 +65,7 @@ export default function RegisterScreen() {
             />
 
             <TextInput
+                testID="register-email-input"
                 style={styles.input}
                 placeholder="Email"
                 placeholderTextColor={colors.textMain + '80'}
@@ -71,6 +76,7 @@ export default function RegisterScreen() {
             />
 
             <TextInput
+                testID="register-password-input"
                 style={styles.input}
                 placeholder="Password"
                 placeholderTextColor={colors.textMain + '80'}
@@ -80,6 +86,7 @@ export default function RegisterScreen() {
             />
 
             <TouchableOpacity
+                testID="register-submit-button"
                 style={[styles.buttonBase, styles.buttonPrimary, { maxHeight: 64 }]}
                 onPress={handleRegister}
                 disabled={loading}
@@ -92,6 +99,8 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+                testID="register-login-link"
+                accessibilityLabel="Login"
                 style={{ marginTop: 20, alignItems: 'center' }}
                 onPress={() => router.back()}
             >

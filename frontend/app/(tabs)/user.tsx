@@ -4,6 +4,8 @@ import { getGlobalStyles } from "@/styles/globalStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { setAuthToken } from "@/api/apiClient";
+import { deleteToken } from "@/lib/tokenStorage";
 
 export default function User() {
     const { colors } = useTheme();
@@ -21,8 +23,10 @@ export default function User() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await AsyncStorage.removeItem('token');
-                            router.replace('/login' as any);
+                            await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'token']);
+                            await setAuthToken(null);
+                            await deleteToken();
+                            router.replace('/(auth)/login' as any);
                         } catch (error) {
                             console.error("Logout error:", error);
                             Alert.alert("Error", "Failed to log out.");
@@ -34,8 +38,8 @@ export default function User() {
     };
 
     return (
-        <View style={styles.centeredContent}>
-            <Text style={styles.mainTitle}>User Profile</Text>
+        <View testID="user-screen" style={styles.centeredContent}>
+            <Text testID="user-title" style={styles.mainTitle}>User Profile</Text>
 
             <View style={{ marginVertical: 20, alignItems: 'center' }}>
                 <Text style={{ textAlign: 'center', color: colors.textMain, fontSize: 16 }}>
@@ -45,6 +49,8 @@ export default function User() {
 
             <View style={styles.cameraButtonContainer}>
                 <TouchableOpacity
+                    testID="logout-button"
+                    accessibilityLabel="Log Out"
                     style={[styles.buttonBase, styles.buttonDanger]}
                     onPress={handleLogout}
                 >

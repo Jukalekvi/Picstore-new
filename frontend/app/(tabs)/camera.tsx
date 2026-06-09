@@ -8,6 +8,8 @@ import ObservationForm from '../../components/ObservationForm';
 import { useTheme } from '@/context/ThemeContext';
 import { getGlobalStyles } from '@/styles/globalStyles';
 
+const LOCATION_TIMEOUT_MS = 3000;
+
 export default function CameraScreen() {
     const { colors } = useTheme();
     const styles = getGlobalStyles(colors);
@@ -79,22 +81,37 @@ export default function CameraScreen() {
         }
     };
 
-    const takePicture = async () => {
-        if (cameraRef.current) {
-            try {
-                let { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                    let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                    setLatitude(loc.coords.latitude);
-                    setLongitude(loc.coords.longitude);
-                }
+    const updateCurrentLocation = async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return;
 
-                const photo = await cameraRef.current.takePictureAsync();
-                if (photo) setImage(photo.uri);
-            } catch (e) {
-                console.error("Camera error:", e);
-                Alert.alert("Error", "Failed to capture image.");
+            const loc = await Promise.race([
+                Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+                new Promise<null>(resolve => setTimeout(resolve, LOCATION_TIMEOUT_MS, null)),
+            ]);
+
+            if (!loc) return;
+
+            setLatitude(loc.coords.latitude);
+            setLongitude(loc.coords.longitude);
+        } catch (e) {
+            console.warn("Location unavailable:", e);
+        }
+    };
+
+    const takePicture = async () => {
+        if (!cameraRef.current) return;
+
+        try {
+            const photo = await cameraRef.current.takePictureAsync();
+            if (photo) {
+                setImage(photo.uri);
+                void updateCurrentLocation();
             }
+        } catch (e) {
+            console.error("Camera error:", e);
+            Alert.alert("Error", "Failed to capture image.");
         }
     };
 
@@ -108,8 +125,8 @@ export default function CameraScreen() {
 
     if (!permission.granted) {
         return (
-            <View style={styles.container}>
-                <Text style={{ textAlign: 'center', paddingTop: 100, color: colors.textMain }}>
+            <View testID="camera-permission-screen" style={styles.container}>
+                <Text testID="camera-permission-message" style={{ textAlign: 'center', paddingTop: 100, color: colors.textMain }}>
                     We need your permission to show the camera
                 </Text>
                 <Button onPress={requestPermission} title="Grant Permission" color={colors.primary} />
@@ -121,7 +138,7 @@ export default function CameraScreen() {
         return (
             <ScrollView style={styles.container}>
                 <View style={styles.formWrapper}>
-                    <Text style={styles.modalTitle}>New Observation</Text>
+                    <Text testID="new-observation-title" style={styles.modalTitle}>New Observation</Text>
                     <ObservationForm
                         initialData={{
                             speciesName: '',
@@ -140,9 +157,9 @@ export default function CameraScreen() {
     }
 
     return (
-        <View style={styles.container}>
+        <View testID="camera-screen" style={styles.container}>
             <View style={styles.formWrapper}>
-                <Text style={styles.modalTitle}>Capture Species</Text>
+                <Text testID="capture-species-title" style={styles.modalTitle}>Capture Species</Text>
 
                 <View style={styles.cameraWrapper}>
                     {isFocused && (
@@ -156,6 +173,8 @@ export default function CameraScreen() {
 
                 <View style={styles.cameraButtonContainer}>
                     <TouchableOpacity
+                        testID="camera-flip-button"
+                        accessibilityLabel="Flip camera"
                         style={[styles.buttonBase, styles.buttonSecondary]}
                         onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
                     >
@@ -163,6 +182,8 @@ export default function CameraScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                        testID="camera-capture-button"
+                        accessibilityLabel="Capture photo"
                         style={[styles.buttonBase, styles.buttonPrimary]}
                         onPress={takePicture}
                     >

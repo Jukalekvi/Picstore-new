@@ -96,12 +96,25 @@ export default function Gallery() {
     if (loading) return <View style={styles.centeredContent}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
     return (
-        <View style={[styles.container, styles.screenPadding]}>
-            <Text style={styles.mainTitle}>Your Collection</Text>
+        <View testID="gallery-screen" style={[styles.container, styles.screenPadding]}>
+            <Text testID="gallery-title" style={styles.mainTitle}>Your Collection</Text>
 
             <View style={styles.searchSortContainer}>
-                <TextInput style={styles.searchBarInput} placeholder="Search..." placeholderTextColor={colors.textMain + '60'} value={searchQuery} onChangeText={setSearchQuery} />
-                <TouchableOpacity style={styles.sortActionButton} onPress={toggleSortMode}>
+                <TextInput
+                    testID="gallery-search-input"
+                    accessibilityLabel="Search observations"
+                    style={styles.searchBarInput}
+                    placeholder="Search..."
+                    placeholderTextColor={colors.textMain + '60'}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+                <TouchableOpacity
+                    testID="gallery-sort-button"
+                    accessibilityLabel="Toggle sort order"
+                    style={styles.sortActionButton}
+                    onPress={toggleSortMode}
+                >
                     <MaterialCommunityIcons name={getSortIconAndLabel().icon as any} size={22} color={colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -110,11 +123,22 @@ export default function Gallery() {
 
             <View style={styles.filterBarContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
-                    <TouchableOpacity style={[styles.filterButton, selectedCategoryFilter === null ? styles.filterButtonActive : styles.filterButtonInactive]} onPress={() => setSelectedCategoryFilter(null)}>
+                    <TouchableOpacity
+                        testID="gallery-filter-all"
+                        accessibilityLabel="Filter All"
+                        style={[styles.filterButton, selectedCategoryFilter === null ? styles.filterButtonActive : styles.filterButtonInactive]}
+                        onPress={() => setSelectedCategoryFilter(null)}
+                    >
                         <Text style={{ color: selectedCategoryFilter === null ? "#ffffff" : colors.textMain }}>All</Text>
                     </TouchableOpacity>
                     {CATEGORIES.map(cat => (
-                        <TouchableOpacity key={cat.id} style={[styles.filterButton, selectedCategoryFilter === cat.id ? styles.filterButtonActive : styles.filterButtonInactive]} onPress={() => setSelectedCategoryFilter(cat.id)}>
+                        <TouchableOpacity
+                            key={cat.id}
+                            testID={`gallery-filter-${cat.name}`}
+                            accessibilityLabel={`Filter ${cat.name}`}
+                            style={[styles.filterButton, selectedCategoryFilter === cat.id ? styles.filterButtonActive : styles.filterButtonInactive]}
+                            onPress={() => setSelectedCategoryFilter(cat.id)}
+                        >
                             <Text style={{ color: selectedCategoryFilter === cat.id ? "#ffffff" : colors.textMain }}>{cat.name}</Text>
                         </TouchableOpacity>
                     ))}
@@ -131,7 +155,7 @@ export default function Gallery() {
                 data={processedObservations}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.card}>
+                    <View testID={`observation-card-${item.id}`} accessibilityLabel={`Observation ${item.speciesName}`} style={styles.card}>
                         <Image source={{ uri: getFullImageUrl(item.imagePath) }} style={styles.cardImage} />
                         <View style={styles.cardInfoRow}>
                             <View style={styles.cardTextContainer}>
@@ -146,8 +170,22 @@ export default function Gallery() {
                                 </View>
                             </View>
                             <View style={styles.actionButtonRow}>
-                                <TouchableOpacity style={{ backgroundColor: colors.infoLight, padding: 8, borderRadius: 8 }} onPress={() => setEditingObservation(item)}><MaterialCommunityIcons name="pencil" size={18} color={colors.secondary} /></TouchableOpacity>
-                                <TouchableOpacity style={{ backgroundColor: colors.dangerLight, padding: 8, borderRadius: 8 }} onPress={() => deleteObservation(item.id)}><MaterialCommunityIcons name="trash-can" size={18} color={colors.danger} /></TouchableOpacity>
+                                <TouchableOpacity
+                                    testID={`edit-observation-${item.id}`}
+                                    accessibilityLabel={`Edit ${item.speciesName}`}
+                                    style={{ backgroundColor: colors.infoLight, padding: 8, borderRadius: 8 }}
+                                    onPress={() => setEditingObservation(item)}
+                                >
+                                    <MaterialCommunityIcons name="pencil" size={18} color={colors.secondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    testID={`delete-observation-${item.id}`}
+                                    accessibilityLabel={`Delete ${item.speciesName}`}
+                                    style={{ backgroundColor: colors.dangerLight, padding: 8, borderRadius: 8 }}
+                                    onPress={() => deleteObservation(item.id)}
+                                >
+                                    <MaterialCommunityIcons name="trash-can" size={18} color={colors.danger} />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>

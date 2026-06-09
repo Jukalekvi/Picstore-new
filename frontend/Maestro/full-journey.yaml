@@ -1,0 +1,199 @@
+appId: com.anonymous.Frontend
+name: Full app journey
+tags:
+  - e2e
+  - full-journey
+jsEngine: graaljs
+---
+- evalScript: ${output.e2eUser = "maestro_full_" + Date.now()}
+- evalScript: ${output.e2eEmail = output.e2eUser + "@example.com"}
+- evalScript: ${output.createdSpecies = "Maestro Bird " + Date.now()}
+- evalScript: ${output.editCreatedLabel = "Edit " + output.createdSpecies}
+- evalScript: ${output.deleteCreatedLabel = "Delete " + output.createdSpecies}
+
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn:
+          text: "http://10.0.2.2:8081"
+          retryTapIfNoChange: true
+- runFlow:
+    when:
+      visible: Connect
+    commands:
+      - tapOn: "exp://"
+      - inputText: "http://10.0.2.2:8081"
+      - hideKeyboard
+      - tapOn: Connect
+- tapOn:
+    text: Continue
+    optional: true
+- tapOn:
+    text: Close
+    optional: true
+
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 60000
+- tapOn: "Register"
+- extendedWaitUntil:
+    visible: "Create Account"
+    timeout: 10000
+- tapOn: "Username"
+- inputText: ${output.e2eUser}
+- tapOn: "Email"
+- inputText: ${output.e2eEmail}
+- tapOn: "Password"
+- inputText: "PicstoreE2E123!"
+- hideKeyboard
+- tapOn: "Register"
+- extendedWaitUntil:
+    visible: Success
+    timeout: 15000
+- tapOn: OK
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 10000
+- tapOn: "Email"
+- inputText: ${output.e2eEmail}
+- tapOn: "Password"
+- inputText: "PicstoreE2E123!"
+- hideKeyboard
+- tapOn: "Login"
+- extendedWaitUntil:
+    visible: "Picstore"
+    timeout: 15000
+
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 10000
+- tapOn: "Dark"
+- assertVisible: "Currently using dark mode"
+- tapOn: "Light"
+- assertVisible: "Currently using light mode"
+- tapOn: "System"
+- assertVisible: "Currently using device mode"
+
+- tapOn: "Camera"
+- runFlow:
+    when:
+      visible: "Grant Permission"
+    commands:
+      - tapOn: "Grant Permission"
+- extendedWaitUntil:
+    visible: "Capture Species"
+    timeout: 20000
+- tapOn: "Capture photo"
+- extendedWaitUntil:
+    visible: "No thanks"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "No thanks"
+    optional: true
+- extendedWaitUntil:
+    visible: "New Observation"
+    timeout: 30000
+- tapOn: "Species name"
+- inputText: ${output.createdSpecies}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Observation description"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn: "Observation description"
+- inputText: "Created by Maestro full journey"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Birds"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn: "Birds"
+- scrollUntilVisible:
+    element:
+      text: "Save Observation"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn: "Save Observation"
+- extendedWaitUntil:
+    visible: Success
+    timeout: 30000
+- tapOn: OK
+
+- tapOn: "Gallery"
+- extendedWaitUntil:
+    visible: "Your Collection"
+    timeout: 30000
+- tapOn: "Search observations"
+- inputText: ${output.createdSpecies}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.createdSpecies}
+    timeout: 30000
+- tapOn: "Toggle sort order"
+- assertVisible: "Order: Oldest first"
+- tapOn: "Toggle sort order"
+- assertVisible: "Order: Alphabetical (A-Z)"
+- tapOn: "Filter Birds"
+- assertVisible: ${output.createdSpecies}
+- tapOn: "Filter All"
+
+- tapOn: ${output.editCreatedLabel}
+- extendedWaitUntil:
+    visible: ${output.createdSpecies}
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      text: "Mammals"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn: "Mammals"
+- scrollUntilVisible:
+    element:
+      text: "Update"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 50
+- tapOn: "Update"
+- extendedWaitUntil:
+    visible: ${output.createdSpecies}
+    timeout: 30000
+- tapOn: "Filter Mammals"
+- assertVisible: ${output.createdSpecies}
+- tapOn: "Filter All"
+- assertVisible: ${output.createdSpecies}
+
+- tapOn: ${output.deleteCreatedLabel}
+- extendedWaitUntil:
+    visible: "Are you sure?"
+    timeout: 10000
+- tapOn: "Delete"
+- extendedWaitUntil:
+    notVisible: ${output.deleteCreatedLabel}
+    timeout: 30000
+
+- tapOn: "User"
+- extendedWaitUntil:
+    visible: "User Profile"
+    timeout: 10000
+- tapOn: "Log Out"
+- extendedWaitUntil:
+    visible: "Are you sure you want to log out?"
+    timeout: 10000
+- tapOn: "Log Out"
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 15000

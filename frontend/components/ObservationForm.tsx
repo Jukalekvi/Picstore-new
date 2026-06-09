@@ -87,6 +87,8 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
     /* Displays one category option as a selectable item in the list. */
     const renderCategoryItem = ({ item }: any) => (
         <TouchableOpacity
+            testID={`observation-category-${item.name}`}
+            accessibilityLabel={`Category ${item.name}`}
             style={[
                 styles.categoryItem,
                 selectedCategory === item.id && styles.categoryItemActive
@@ -107,7 +109,7 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
             contentContainerStyle={{ flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
         >
-            <View style={styles.formContainer}>
+            <View testID="observation-form" style={styles.formContainer}>
                 {/* Shows the photo that was taken */}
                 <Image source={{ uri: initialData.imagePath }} style={styles.imagePreview} />
 
@@ -129,6 +131,8 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
                         </Text>
                     </View>
                     <Switch
+                        testID="observation-location-switch"
+                        accessibilityLabel="Toggle location tags"
                         value={shareLocation}
                         onValueChange={setShareLocation}
                         trackColor={{ false: '#767577', true: colors.primary + '80' }}
@@ -168,6 +172,8 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
 
                 {/* Text box to type the species name */}
                 <TextInput
+                    testID="observation-species-input"
+                    accessibilityLabel="Species name"
                     style={styles.input}
                     placeholder="Species name"
                     placeholderTextColor={colors.textMain + '80'}
@@ -178,6 +184,8 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
                 {/* Text box to type the short description with length validation character counter */}
                 <View style={{ alignSelf: 'stretch', marginBottom: 15 }}>
                     <TextInput
+                        testID="observation-description-input"
+                        accessibilityLabel="Observation description"
                         style={[styles.input, { height: 80, paddingTop: 10, textAlignVertical: 'top' }]}
                         placeholder="Description / notes (max 200 chars)"
                         placeholderTextColor={colors.textMain + '80'}
@@ -208,11 +216,18 @@ export default function ObservationForm({ initialData, onSave, onCancel, saveBut
 
                 {/* Cancel and Save buttons at the bottom */}
                 <View style={styles.buttonRow}>
-                    <TouchableOpacity style={[styles.buttonBase, styles.buttonDanger]} onPress={onCancel}>
+                    <TouchableOpacity
+                        testID="observation-cancel-button"
+                        accessibilityLabel="Cancel observation form"
+                        style={[styles.buttonBase, styles.buttonDanger]}
+                        onPress={onCancel}
+                    >
                         <Text style={styles.buttonTextLight}>Cancel</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                        testID="observation-save-button"
+                        accessibilityLabel={saveButtonText}
                         style={[styles.buttonBase, styles.buttonPrimary]}
                         onPress={handleSave}
                     >

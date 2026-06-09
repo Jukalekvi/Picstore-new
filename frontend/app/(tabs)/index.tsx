@@ -8,8 +8,8 @@ export default function Index() {
     const styles = getGlobalStyles(colors);
 
     return (
-        <View style={styles.centeredContent}>
-            <Text style={[styles.mainTitle, { fontSize: 28 }]}>Picstore</Text>
+        <View testID="home-screen" style={styles.centeredContent}>
+            <Text testID="home-title" style={[styles.mainTitle, { fontSize: 28 }]}>Picstore</Text>
             <Text style={{ textAlign: 'center', color: colors.textMain, fontSize: 16 }}>
                 Welcome to Picstore, the application for filling galleries with pictures you have taken and sharing them with.
             </Text>

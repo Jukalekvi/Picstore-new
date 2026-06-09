@@ -1,0 +1,63 @@
+appId: com.anonymous.Frontend
+name: Register and login
+tags:
+  - auth
+jsEngine: graaljs
+---
+- evalScript: ${output.e2eUser = "maestro_" + Date.now()}
+- evalScript: ${output.e2eEmail = output.e2eUser + "@example.com"}
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn:
+          text: "http://10.0.2.2:8081"
+          retryTapIfNoChange: true
+- runFlow:
+    when:
+      visible: Connect
+    commands:
+      - tapOn: "exp://"
+      - inputText: "http://10.0.2.2:8081"
+      - hideKeyboard
+      - tapOn: Connect
+- tapOn:
+    text: Continue
+    optional: true
+- tapOn:
+    text: Close
+    optional: true
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 60000
+- tapOn: "Register"
+- extendedWaitUntil:
+    visible: "Create Account"
+    timeout: 10000
+- tapOn: "Username"
+- inputText: ${output.e2eUser}
+- tapOn: "Email"
+- inputText: ${output.e2eEmail}
+- tapOn: "Password"
+- inputText: "PicstoreE2E123!"
+- hideKeyboard
+- tapOn: "Register"
+- extendedWaitUntil:
+    visible: Success
+    timeout: 15000
+- tapOn: OK
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 10000
+- tapOn: "Email"
+- inputText: ${output.e2eEmail}
+- tapOn: "Password"
+- inputText: "PicstoreE2E123!"
+- hideKeyboard
+- tapOn: "Login"
+- extendedWaitUntil:
+    visible: "Picstore"
+    timeout: 15000
+- assertVisible: "Picstore"

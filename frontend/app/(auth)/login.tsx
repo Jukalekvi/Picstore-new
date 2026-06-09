@@ -61,13 +61,17 @@ export default function LoginScreen() {
     };
 
     return (
-        <View style={[styles.container, styles.screenPadding, { justifyContent: 'center' }]}>
+        <View
+            testID="login-screen"
+            style={[styles.container, styles.screenPadding, { justifyContent: 'center' }]}
+        >
 
-            <Text style={[styles.mainTitle, { marginBottom: 30 }]}>
+            <Text testID="login-title" style={[styles.mainTitle, { marginBottom: 30 }]}>
                 Picstore Login
             </Text>
 
             <TextInput
+                testID="login-email-input"
                 style={styles.input}
                 placeholder="Email"
                 placeholderTextColor={colors.textMain + '80'}
@@ -78,6 +82,7 @@ export default function LoginScreen() {
             />
 
             <TextInput
+                testID="login-password-input"
                 style={styles.input}
                 placeholder="Password"
                 placeholderTextColor={colors.textMain + '80'}
@@ -87,12 +92,13 @@ export default function LoginScreen() {
             />
 
             {error && (
-                <Text style={{ color: colors.danger, marginBottom: 10, textAlign: 'center' }}>
+                <Text testID="login-error-message" style={{ color: colors.danger, marginBottom: 10, textAlign: 'center' }}>
                     {error}
                 </Text>
             )}
 
             <TouchableOpacity
+                testID="login-submit-button"
                 style={[
                     styles.buttonBase,
                     styles.buttonPrimary,
@@ -109,6 +115,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+                testID="login-register-link"
+                accessibilityLabel="Register"
                 style={{ marginTop: 20, alignItems: 'center' }}
                 onPress={() => router.push('/(auth)/register')}
             >

@@ -16,6 +16,7 @@ function TabRoot() {
                 name="camera"
                 options={{
                     title: 'Camera',
+                    tabBarAccessibilityLabel: 'Camera',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="camera" size={size} color={color} />
                     )
@@ -25,6 +26,7 @@ function TabRoot() {
                 name="gallery"
                 options={{
                     title: 'Gallery',
+                    tabBarAccessibilityLabel: 'Gallery',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="image-multiple" size={size} color={color} />
                     )
@@ -34,6 +36,7 @@ function TabRoot() {
                 name="index"
                 options={{
                     title: 'Home',
+                    tabBarAccessibilityLabel: 'Home',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="home" size={size} color={color} />
                     )
@@ -43,6 +46,7 @@ function TabRoot() {
                 name="settings"
                 options={{
                     title: 'Settings',
+                    tabBarAccessibilityLabel: 'Settings',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="cog" size={size} color={color} />
                     )
@@ -52,6 +56,7 @@ function TabRoot() {
                 name="user"
                 options={{
                     title: 'User',
+                    tabBarAccessibilityLabel: 'User',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="account" size={size} color={color} />
                     )

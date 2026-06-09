@@ -13,6 +13,8 @@ export default function Settings() {
 
         return (
             <TouchableOpacity
+                testID={`theme-${mode}-button`}
+                accessibilityLabel={`Theme ${label}`}
                 style={[styles.segment, isActive && styles.activeSegment]}
                 onPress={() => setThemeMode(mode)}
                 activeOpacity={0.7}
@@ -25,8 +27,8 @@ export default function Settings() {
     };
 
     return (
-        <View style={styles.centeredContent}>
-            <Text style={styles.mainTitle}>Settings</Text>
+        <View testID="settings-screen" style={styles.centeredContent}>
+            <Text testID="settings-title" style={styles.mainTitle}>Settings</Text>
 
             <View style={{ width: '100%', paddingHorizontal: 10 }}>
                 <Text style={{ color: colors.textMain, marginBottom: 12, fontWeight: '600' }}>

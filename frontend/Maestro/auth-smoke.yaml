@@ -1,0 +1,37 @@
+appId: com.anonymous.Frontend
+name: Auth smoke
+tags:
+  - smoke
+  - auth
+---
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn:
+          text: "http://10.0.2.2:8081"
+          retryTapIfNoChange: true
+- runFlow:
+    when:
+      visible: Connect
+    commands:
+      - tapOn: "exp://"
+      - inputText: "http://10.0.2.2:8081"
+      - hideKeyboard
+      - tapOn: Connect
+- tapOn:
+    text: Continue
+    optional: true
+- tapOn:
+    text: Close
+    optional: true
+- extendedWaitUntil:
+    visible: "Picstore Login"
+    timeout: 60000
+- assertVisible: "Picstore Login"
+- assertVisible: "Email"
+- assertVisible: "Password"
+- assertVisible: "Login"
+- assertVisible: "Register"
